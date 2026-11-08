@@ -7,6 +7,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="assets/css/style.css">
   <style>
+    .logout-btn { background: white; color: #cc0000; border: none; padding: 8px 14px; border-radius: 8px; font-weight: 700; cursor: pointer; }
     .admin-card { background: white; border-radius: 10px; padding: 15px; margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); border-left: 4px solid #cc0000; }
     .admin-header { display: flex; justify-content: space-between; margin-bottom: 8px; border-bottom: 1px solid #eee; padding-bottom: 8px; }
     .status-badge { padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; text-transform: uppercase; }
@@ -18,8 +19,8 @@
 <body>
 
   <header class="header">
-    <div class="logo"><i class="fa-solid fa-fire"></i> LPGas<span>.bd</span> Admin</div>
-    <button class="logout-btn" id="logoutBtn" style="background:white; color:#cc0000; border:none; padding:8px 14px; border-radius:8px; font-weight:700; cursor:pointer;">Logout</button>
+    <a href="index.html" class="logo" style="text-decoration: none; color: white;"><i class="fa-solid fa-fire"></i> LPGas<span>.bd</span> Admin</a>
+    <button class="logout-btn" id="logoutBtn">Logout</button>
   </header>
 
   <div class="container" style="margin-top: 20px;">
@@ -36,10 +37,8 @@
 
     let currentUser = null;
 
-    // লগইন স্টেট চেক
     onAuthStateChanged(auth, (user) => {
       if (!user) {
-        // অ্যাডমিন লগইন না থাকলে সাধারণ লগইন পেজে পাঠিয়ে দিবে (পরবর্তীতে অ্যাডমিন লগইন আলাদা করব)
         window.location.href = "partner-login.html"; 
       } else {
         currentUser = user;
@@ -47,17 +46,14 @@
       }
     });
 
-    // লগআউট
     document.getElementById('logoutBtn').addEventListener('click', async () => {
       await signOut(auth);
       window.location.href = "partner-login.html";
     });
 
-    // সব অর্ডার লোড করা
     async function loadAllOrders() {
       const listEl = document.getElementById('allOrdersList');
       try {
-        // সব অর্ডার নতুন থেকে পুরনো ক্রমে আনব
         const q = query(collection(db, "orders"), orderBy("createdAt", "desc"));
         const querySnapshot = await getDocs(q);
 
@@ -82,7 +78,7 @@
                 <p><strong>ঠিকানা:</strong> ${order.customerAddress}</p>
                 <p><strong>গ্যাস:</strong> ${order.cylinderSize} - ${order.quantity} পিস</p>
                 <p><strong>পার্টনার আইডি:</strong> ${order.partnerId}</p>
-                <p style="font-size:11px; color:#888;">সময়: ${date}</p>
+                <p style="font-size:11px; color:#888;">সময়: ${date}</p>
               </div>
             </div>
           `;
@@ -94,6 +90,5 @@
       }
     }
   </script>
-
 </body>
 </html>
