@@ -11,6 +11,7 @@
     .form-group { margin-bottom: 15px; text-align: left; }
     .form-group label { display: block; font-weight: 700; font-size: 14px; margin-bottom: 6px; color: #333; }
     .form-group input, .form-group select { width: 100%; padding: 12px; border: 1.5px solid #ccc; border-radius: 8px; font-size: 15px; outline: none; }
+    .search-input { margin-bottom: 5px !important; background: #f8f9fa; border-color: #0066cc !important; }
     .btn-submit { width: 100%; background: #cc0000; color: white; border: none; padding: 14px; border-radius: 8px; font-weight: 800; font-size: 16px; cursor: pointer; margin-top: 10px; }
     .toggle-link { color: #0066cc; cursor: pointer; font-weight: 700; font-size: 14px; margin-top: 15px; display: block; }
     .signup-fields { display: none; }
@@ -42,18 +43,23 @@
           <label>ফোন নাম্বার (Phone)</label>
           <input type="tel" id="regPhone" placeholder="017XXXXXXXX">
         </div>
+        
         <div class="form-group">
           <label>জেলা (District)</label>
+          <input type="text" id="regDistrictSearch" class="search-input" placeholder="🔍 জেলা খুঁজুন (যেমন: Dhaka)">
           <select id="regDistrict" onchange="loadThanas('regDistrict', 'regThana')">
             <option value="">জেলা সিলেক্ট করুন</option>
           </select>
         </div>
+        
         <div class="form-group">
           <label>থানা (Thana)</label>
+          <input type="text" id="regThanaSearch" class="search-input" placeholder="🔍 থানা খুঁজুন">
           <select id="regThana">
             <option value="">আগে জেলা সিলেক্ট করুন</option>
           </select>
         </div>
+        
         <div class="form-group">
           <label>পার্টনার আইডি (Admin দিবে)</label>
           <input type="text" id="regPartnerId" placeholder="যেমন: 1">
@@ -72,18 +78,46 @@
     import { doc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
     let isSignup = false;
-    let locationData = {}; // JSON ডেটা এখানে জমা হবে
+    let locationData = {};
+    let allDistricts = [];
 
     // জেলা লোড করা
     fetch('./assets/js/bd-locations.json')
       .then(res => res.json())
       .then(data => {
         locationData = data;
-        const distSelect = document.getElementById('regDistrict');
-        for (const district in data) {
-          distSelect.innerHTML += `<option value="${district}">${district}</option>`;
-        }
+        allDistricts = Object.keys(data).sort(); // A-Z সাজানো
+        renderDistricts(allDistricts);
       });
+
+    function renderDistricts(districts) {
+      const distSelect = document.getElementById('regDistrict');
+      distSelect.innerHTML = '<option value="">জেলা সিলেক্ট করুন</option>';
+      districts.forEach(district => {
+        distSelect.innerHTML += `<option value="${district}">${district}</option>`;
+      });
+    }
+
+    // জেলা সার্চ
+    document.getElementById('regDistrictSearch').addEventListener('input', (e) => {
+      const val = e.target.value.toLowerCase();
+      const filtered = allDistricts.filter(d => d.toLowerCase().includes(val));
+      renderDistricts(filtered);
+    });
+
+    // থানা সার্চ
+    document.getElementById('regThanaSearch').addEventListener('input', (e) => {
+      const val = e.target.value.toLowerCase();
+      const district = document.getElementById('regDistrict').value;
+      if (!district) return;
+      
+      const thanaSelect = document.getElementById('regThana');
+      const allThanas = locationData[district] || [];
+      const filtered = allThanas.filter(t => t.toLowerCase().includes(val));
+      
+      thanaSelect.innerHTML = '<option value="">থানা সিলেক্ট করুন</option>';
+      filtered.forEach(t => { thanaSelect.innerHTML += `<option value="${t}">${t}</option>`; });
+    });
 
     // জেলা সিলেক্ট করলে থানা লোড হবে
     window.loadThanas = function(districtId, thanaId) {
@@ -92,7 +126,7 @@
       thanaSelect.innerHTML = '<option value="">থানা সিলেক্ট করুন</option>';
       
       if (district && locationData[district]) {
-        locationData[district].forEach(thana => {
+        locationData[district].sort().forEach(thana => {
           thanaSelect.innerHTML += `<option value="${thana}">${thana}</option>`;
         });
       }
