@@ -8,14 +8,24 @@
   <link rel="stylesheet" href="assets/css/style.css">
   <style>
     .logout-btn { background: white; color: #cc0000; border: none; padding: 8px 14px; border-radius: 8px; font-weight: 700; cursor: pointer; }
-    .dash-tabs { display: flex; border-bottom: 2px solid #eee; margin-bottom: 20px; }
-    .dash-tab { padding: 10px 20px; cursor: pointer; font-weight: 700; color: #666; border-bottom: 2px solid transparent; margin-bottom: -2px; }
+    .dash-tabs { display: flex; border-bottom: 2px solid #eee; margin-bottom: 20px; overflow-x: auto; }
+    .dash-tab { padding: 10px 20px; cursor: pointer; font-weight: 700; color: #666; border-bottom: 2px solid transparent; margin-bottom: -2px; white-space: nowrap; }
     .dash-tab.active { color: #cc0000; border-bottom-color: #cc0000; }
     
     .admin-card { background: white; border-radius: 10px; padding: 15px; margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); border-left: 4px solid #cc0000; }
     .partner-card { background: white; border-radius: 10px; padding: 15px; margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); border-left: 4px solid #0066cc; }
     .btn-delete { background: #d9534f; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-weight: 700; cursor: pointer; font-size: 12px; margin-top: 10px;}
     .brand-tag { display: inline-block; background: #f0f4f8; padding: 3px 8px; border-radius: 4px; font-size: 11px; margin: 2px; color: #333; }
+    
+    /* Add Partner Form */
+    .add-form-container { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 20px; border: 1px solid #eee; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+    .form-group { margin-bottom: 10px; }
+    .form-group label { display: block; font-size: 12px; font-weight: 700; margin-bottom: 5px; color: #333; }
+    .form-group input, .form-group select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; outline: none; font-size: 14px; }
+    .btn-add-submit { background: #25D366; color: white; border: none; padding: 12px; border-radius: 6px; font-weight: 700; width: 100%; cursor: pointer; margin-top: 10px; font-size: 15px; }
+    
+    .brand-row { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 5px; margin-bottom: 5px; }
   </style>
 </head>
 <body>
@@ -29,31 +39,158 @@
     <div class="dash-tabs">
       <div class="dash-tab active" onclick="switchTab('orders')">All Orders</div>
       <div class="dash-tab" onclick="switchTab('partners')">Partners List</div>
+      <div class="dash-tab" onclick="switchTab('add-partner')">Add Partner</div>
     </div>
 
-    <div id="tab-orders"><div id="allOrdersList"><p style="text-align:center;">লোড হচ্ছে...</p></div></div>
-    <div id="tab-partners" style="display: none;"><div id="allPartnersList"><p style="text-align:center;">লোড হচ্ছে...</p></div></div>
+    <!-- All Orders Tab -->
+    <div id="tab-orders">
+      <div id="allOrdersList"><p style="text-align:center; color:#888;">লোড হচ্ছে...</p></div>
+    </div>
+
+    <!-- Partners List Tab -->
+    <div id="tab-partners" style="display: none;">
+      <div id="allPartnersList"><p style="text-align:center; color:#888;">লোড হচ্ছে...</p></div>
+    </div>
+
+    <!-- Add Partner Tab -->
+    <div id="tab-add-partner" style="display: none;">
+      <div class="add-form-container">
+        <h3 style="margin-bottom: 15px; color: #cc0000;">নতুন পার্টনার যোগ করুন</h3>
+        <div id="addPartnerAlert" style="display:none; padding:10px; margin-bottom:10px; border-radius:6px;"></div>
+        
+        <div class="form-row">
+          <div class="form-group"><label>দোকানের নাম</label><input id="apShopName" placeholder="যেমন: Omera LPG Gas"></div>
+          <div class="form-group"><label>ফোন নাম্বার</label><input id="apPhone" placeholder="017XXXXXXXX"></div>
+        </div>
+        
+        <div class="form-row">
+          <div class="form-group"><label>পার্টনার আইডি (ইউনিক)</label><input id="apPartnerId" placeholder="যেমন: 1"></div>
+          <div class="form-group"><label>ইমেইল (ঐচ্ছিক)</label><input id="apEmail" placeholder="partner@gmail.com"></div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>জেলা (District)</label>
+            <input type="text" id="apDistrictSearch" class="search-input" placeholder="🔍 জেলা খুঁজুন" style="margin-bottom: 5px;">
+            <select id="apDistrict" onchange="loadThanas('apDistrict', 'apThana')">
+              <option value="">জেলা সিলেক্ট করুন</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>থানা (Thana)</label>
+            <input type="text" id="apThanaSearch" class="search-input" placeholder="🔍 থানা খুঁজুন" style="margin-bottom: 5px;">
+            <select id="apThana">
+              <option value="">আগে জেলা সিলেক্ট করুন</option>
+            </select>
+          </div>
+        </div>
+
+        <hr style="margin: 15px 0; border: none; border-top: 1px dashed #ccc;">
+        <p style="font-size: 14px; font-weight: 700; margin-bottom: 10px; color: #0066cc;">কোম্পানি ও দাম (সার্ভিস চার্জ সহ)</p>
+        
+        <div id="brandRowsContainer">
+          <!-- ডিফল্ট ১টা ব্র্যান্ড রো থাকবে -->
+          <div class="brand-row">
+            <input type="text" class="b-name" placeholder="কোম্পানি (Omera)">
+            <input type="number" class="b-price12" placeholder="১২কেজি ৳">
+            <input type="number" class="b-price25" placeholder="২৫কেজি ৳">
+          </div>
+        </div>
+        <button type="button" onclick="addNewBrandRow()" style="background:none; border:none; color:#0066cc; font-weight:700; cursor:pointer; margin-bottom: 15px;">+ আরেকটি কোম্পানি যোগ করুন</button>
+
+        <button class="btn-add-submit" onclick="submitNewPartner()">Save & Add Partner</button>
+      </div>
+    </div>
   </div>
 
   <script type="module">
     import { auth, db } from './assets/js/firebase-config.js';
     import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-    import { collection, getDocs, query, orderBy, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { collection, getDocs, query, orderBy, doc, deleteDoc, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    let locationData = {};
+    let allDistricts = [];
+
+    // অ্যাডমিন ইমেইল সিকিউরিটি চেক
+    const ADMIN_EMAIL = "admin@lpgas.bd";
 
     onAuthStateChanged(auth, (user) => {
-      if (!user) { window.location.href = "partner-login.html"; } 
-      else { loadAllOrders(); loadAllPartners(); }
+      // যদি লগইন না থাকে অথবা ইমেইল অ্যাডমিনের না হয়, তবে লগইন পেজে পাঠাবে
+      if (!user || user.email !== ADMIN_EMAIL) { 
+        window.location.href = "admin-login.html"; 
+      } else { 
+        loadAllOrders(); 
+        loadAllPartners(); 
+      }
     });
 
     document.getElementById('logoutBtn').addEventListener('click', async () => {
-      await signOut(auth); window.location.href = "partner-login.html";
+      await signOut(auth); 
+      window.location.href = "admin-login.html";
     });
+
+    // জেলা লোড করা
+    fetch('./assets/js/bd-locations.json')
+      .then(res => res.json())
+      .then(data => {
+        locationData = data;
+        allDistricts = Object.keys(data).sort();
+        renderDistricts(allDistricts);
+      });
+
+    function renderDistricts(districts) {
+      const distSelect = document.getElementById('apDistrict');
+      distSelect.innerHTML = '<option value="">জেলা সিলেক্ট করুন</option>';
+      districts.forEach(d => { distSelect.innerHTML += `<option value="${d}">${d}</option>`; });
+    }
+
+    document.getElementById('apDistrictSearch').addEventListener('input', (e) => {
+      const val = e.target.value.toLowerCase();
+      renderDistricts(allDistricts.filter(d => d.toLowerCase().includes(val)));
+    });
+
+    document.getElementById('apThanaSearch').addEventListener('input', (e) => {
+      const val = e.target.value.toLowerCase();
+      const district = document.getElementById('apDistrict').value;
+      if (!district) return;
+      const thanaSelect = document.getElementById('apThana');
+      thanaSelect.innerHTML = '<option value="">থানা সিলেক্ট করুন</option>';
+      locationData[district].filter(t => t.toLowerCase().includes(val)).forEach(t => {
+        thanaSelect.innerHTML += `<option value="${t}">${t}</option>`;
+      });
+    });
+
+    window.loadThanas = function(districtId, thanaId) {
+      const district = document.getElementById(districtId).value;
+      const thanaSelect = document.getElementById(thanaId);
+      thanaSelect.innerHTML = '<option value="">থানা সিলেক্ট করুন</option>';
+      if (district && locationData[district]) {
+        locationData[district].sort().forEach(thana => {
+          thanaSelect.innerHTML += `<option value="${thana}">${thana}</option>`;
+        });
+      }
+    };
+
+    window.addNewBrandRow = function() {
+      const container = document.getElementById('brandRowsContainer');
+      const div = document.createElement('div');
+      div.className = 'brand-row';
+      div.innerHTML = `
+        <input type="text" class="b-name" placeholder="কোম্পানি">
+        <input type="number" class="b-price12" placeholder="১২কেজি ৳">
+        <input type="number" class="b-price25" placeholder="২৫কেজি ৳">
+      `;
+      container.appendChild(div);
+    };
 
     window.switchTab = function(tab) {
       document.querySelectorAll('.dash-tab').forEach(t => t.classList.remove('active'));
-      document.querySelectorAll('.dash-tab')[tab === 'orders' ? 0 : 1].classList.add('active');
+      const idx = tab === 'orders' ? 0 : (tab === 'partners' ? 1 : 2);
+      document.querySelectorAll('.dash-tab')[idx].classList.add('active');
+      
       document.getElementById('tab-orders').style.display = tab === 'orders' ? 'block' : 'none';
       document.getElementById('tab-partners').style.display = tab === 'partners' ? 'block' : 'none';
+      document.getElementById('tab-add-partner').style.display = tab === 'add-partner' ? 'block' : 'none';
     };
 
     async function loadAllOrders() {
@@ -80,13 +217,9 @@
         const snapshot = await getDocs(collection(db, "users"));
         listEl.innerHTML = snapshot.docs.map(docSnap => {
           const p = docSnap.data();
-          
-          let brandsHtml = '';
-          if(p.brands && p.brands.length > 0) {
-            brandsHtml = p.brands.map(b => `<span class="brand-tag">${b.name} (১২কেজি: ৳${b.price12 || '-'})</span>`).join('');
-          } else {
-            brandsHtml = '<span style="font-size:12px; color:#888;">No brands added</span>';
-          }
+          let brandsHtml = p.brands && p.brands.length > 0 
+            ? p.brands.map(b => `<span class="brand-tag">${b.name} (১২কেজি: ৳${b.price12 || '-'})</span>`).join('')
+            : '<span style="font-size:12px; color:#888;">No brands added</span>';
 
           return `
             <div class="partner-card">
@@ -105,6 +238,68 @@
         await deleteDoc(doc(db, "users", docId));
         alert("ডিলিট হয়েছে!"); loadAllPartners();
       } catch (error) { alert("সমস্যা: " + error.message); }
+    };
+
+    window.submitNewPartner = async function() {
+      const alertEl = document.getElementById('addPartnerAlert');
+      const shopName = document.getElementById('apShopName').value;
+      const phone = document.getElementById('apPhone').value;
+      const partnerId = document.getElementById('apPartnerId').value;
+      const email = document.getElementById('apEmail').value || 'noemail@lpgas.bd';
+      const district = document.getElementById('apDistrict').value;
+      const thana = document.getElementById('apThana').value;
+
+      if(!shopName || !phone || !partnerId || !district || !thana) {
+        alertEl.style.display = 'block'; alertEl.style.background = '#f8d7da'; alertEl.style.color = '#721c24';
+        alertEl.innerText = 'দোকানের নাম, ফোন, পার্টনার আইডি, জেলা ও থানা অবশ্যই দিতে হবে!';
+        return;
+      }
+
+      const brandRows = document.querySelectorAll('.brand-row');
+      const brands = [];
+      brandRows.forEach(row => {
+        const name = row.querySelector('.b-name').value;
+        const price12 = row.querySelector('.b-price12').value;
+        const price25 = row.querySelector('.b-price25').value;
+        if(name) { brands.push({ name, price12: Number(price12) || 0, price25: Number(price25) || 0 }); }
+      });
+
+      try {
+        await addDoc(collection(db, 'users'), {
+          shopName: shopName,
+          phone: phone,
+          partnerId: partnerId,
+          email: email,
+          district: district,
+          thana: thana,
+          brands: brands,
+          role: 'partner',
+          createdAt: serverTimestamp()
+        });
+
+        alertEl.style.display = 'block'; alertEl.style.background = '#d4edda'; alertEl.style.color = '#155724';
+        alertEl.innerText = 'সফলভাবে পার্টনার যোগ হয়েছে! হোমপেজে চেক করুন।';
+        
+        // ফর্ম ক্লিয়ার করা
+        document.getElementById('apShopName').value = '';
+        document.getElementById('apPhone').value = '';
+        document.getElementById('apPartnerId').value = '';
+        document.getElementById('apEmail').value = '';
+        document.getElementById('apDistrict').value = '';
+        document.getElementById('apThana').innerHTML = '<option value="">আগে জেলা সিলেক্ট করুন</option>';
+        document.getElementById('brandRowsContainer').innerHTML = `
+          <div class="brand-row">
+            <input type="text" class="b-name" placeholder="কোম্পানি (Omera)">
+            <input type="number" class="b-price12" placeholder="১২কেজি ৳">
+            <input type="number" class="b-price25" placeholder="২৫কেজি ৳">
+          </div>`;
+
+        loadAllPartners(); // লিস্ট রিফ্রেশ
+        setTimeout(() => { alertEl.style.display = 'none'; }, 4000);
+      } catch (error) {
+        alertEl.style.display = 'block'; alertEl.style.background = '#f8d7da'; alertEl.style.color = '#721c24';
+        alertEl.innerText = error.message;
+      }
     };
   </script>
 </body>
