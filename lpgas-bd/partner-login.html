@@ -10,7 +10,7 @@
     .login-container { background: white; max-width: 400px; margin: 40px auto; padding: 30px; border-radius: 14px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid #eee; text-align: center; }
     .form-group { margin-bottom: 15px; text-align: left; }
     .form-group label { display: block; font-weight: 700; font-size: 14px; margin-bottom: 6px; color: #333; }
-    .form-group input { width: 100%; padding: 12px; border: 1.5px solid #ccc; border-radius: 8px; font-size: 15px; outline: none; }
+    .form-group input, .form-group select { width: 100%; padding: 12px; border: 1.5px solid #ccc; border-radius: 8px; font-size: 15px; outline: none; }
     .btn-submit { width: 100%; background: #cc0000; color: white; border: none; padding: 14px; border-radius: 8px; font-weight: 800; font-size: 16px; cursor: pointer; margin-top: 10px; }
     .toggle-link { color: #0066cc; cursor: pointer; font-weight: 700; font-size: 14px; margin-top: 15px; display: block; }
     .signup-fields { display: none; }
@@ -43,8 +43,16 @@
           <input type="tel" id="regPhone" placeholder="017XXXXXXXX">
         </div>
         <div class="form-group">
-          <label>আপনার এলাকা (Area)</label>
-          <input type="text" id="regArea" placeholder="যেমন: ধানমন্ডি, ঢাকা">
+          <label>জেলা (District)</label>
+          <select id="regDistrict" onchange="loadThanas('regDistrict', 'regThana')">
+            <option value="">জেলা সিলেক্ট করুন</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>থানা (Thana)</label>
+          <select id="regThana">
+            <option value="">আগে জেলা সিলেক্ট করুন</option>
+          </select>
         </div>
         <div class="form-group">
           <label>পার্টনার আইডি (Admin দিবে)</label>
@@ -64,6 +72,31 @@
     import { doc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
     let isSignup = false;
+    let locationData = {}; // JSON ডেটা এখানে জমা হবে
+
+    // জেলা লোড করা
+    fetch('./assets/js/bd-locations.json')
+      .then(res => res.json())
+      .then(data => {
+        locationData = data;
+        const distSelect = document.getElementById('regDistrict');
+        for (const district in data) {
+          distSelect.innerHTML += `<option value="${district}">${district}</option>`;
+        }
+      });
+
+    // জেলা সিলেক্ট করলে থানা লোড হবে
+    window.loadThanas = function(districtId, thanaId) {
+      const district = document.getElementById(districtId).value;
+      const thanaSelect = document.getElementById(thanaId);
+      thanaSelect.innerHTML = '<option value="">থানা সিলেক্ট করুন</option>';
+      
+      if (district && locationData[district]) {
+        locationData[district].forEach(thana => {
+          thanaSelect.innerHTML += `<option value="${thana}">${thana}</option>`;
+        });
+      }
+    };
 
     onAuthStateChanged(auth, (user) => {
       if (user && !isSignup) { window.location.href = "partner-dashboard.html"; }
@@ -90,23 +123,25 @@
 
       try {
         if (isSignup) {
-          // নতুন রেজিস্ট্রেশন
+          const district = document.getElementById('regDistrict').value;
+          const thana = document.getElementById('regThana').value;
+          if(!district || !thana) { alert("জেলা ও থানা সিলেক্ট করা বাধ্যতামূলক!"); btn.disabled=false; btn.innerText='রেজিস্ট্রেশন করুন'; return; }
+
           const userCredential = await createUserWithEmailAndPassword(auth, email, password);
           const user = userCredential.user;
           
-          // Firestore-এ ডেটা সেভ
           await setDoc(doc(db, 'users', user.uid), {
             email: email,
             phone: document.getElementById('regPhone').value,
-            address: document.getElementById('regArea').value,
+            district: district,
+            thana: thana,
             partnerId: document.getElementById('regPartnerId').value,
             role: 'partner',
             createdAt: serverTimestamp()
           });
-          alert("সফলভাবে রেজিস্ট্রেশন হয়েছে!");
+          alert("সফলভাবে রেজিস্ট্রেশন হয়েছে!");
           window.location.href = "partner-dashboard.html";
         } else {
-          // লগইন
           await signInWithEmailAndPassword(auth, email, password);
           window.location.href = "partner-dashboard.html";
         }
