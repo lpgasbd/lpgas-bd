@@ -13,21 +13,16 @@
     .dash-tab.active { color: #cc0000; border-bottom-color: #cc0000; }
     
     .admin-card { background: white; border-radius: 10px; padding: 15px; margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); border-left: 4px solid #cc0000; }
-    .admin-header { display: flex; justify-content: space-between; margin-bottom: 8px; border-bottom: 1px solid #eee; padding-bottom: 8px; }
-    .status-badge { padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; text-transform: uppercase; }
-    .status-pending { background: #fff3cd; color: #856404; }
-    .status-delivered { background: #d4edda; color: #155724; }
-    
     .partner-card { background: white; border-radius: 10px; padding: 15px; margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); border-left: 4px solid #0066cc; display: flex; justify-content: space-between; align-items: center; }
     .btn-edit { background: #f0ad4e; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-weight: 700; cursor: pointer; font-size: 12px; }
     .btn-delete { background: #d9534f; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-weight: 700; cursor: pointer; font-size: 12px; margin-left: 5px; }
     
     .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 999; display: none; align-items: center; justify-content: center; padding: 16px; }
     .modal-overlay.active { display: flex; }
-    .modal-box { background: white; border-radius: 12px; padding: 24px; width: 100%; max-width: 400px; position: relative; }
-    .form-group { margin-bottom: 15px; }
-    .form-group label { display: block; font-weight: 700; font-size: 13px; margin-bottom: 5px; }
-    .form-group input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; outline: none; }
+    .modal-box { background: white; border-radius: 12px; padding: 24px; width: 100%; max-width: 400px; }
+    .form-group { margin-bottom: 12px; }
+    .form-group label { display: block; font-weight: 700; font-size: 12px; margin-bottom: 4px; }
+    .form-group input { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 6px; }
     .btn-save { background: #25D366; color: white; border: none; padding: 12px; border-radius: 6px; font-weight: 700; width: 100%; cursor: pointer; }
   </style>
 </head>
@@ -44,13 +39,8 @@
       <div class="dash-tab" onclick="switchTab('partners')">Partners List</div>
     </div>
 
-    <div id="tab-orders">
-      <div id="allOrdersList"><p style="text-align:center; color:#888;">লোড হচ্ছে...</p></div>
-    </div>
-
-    <div id="tab-partners" style="display: none;">
-      <div id="allPartnersList"><p style="text-align:center; color:#888;">লোড হচ্ছে...</p></div>
-    </div>
+    <div id="tab-orders"><div id="allOrdersList"><p style="text-align:center;">লোড হচ্ছে...</p></div></div>
+    <div id="tab-partners" style="display: none;"><div id="allPartnersList"><p style="text-align:center;">লোড হচ্ছে...</p></div></div>
   </div>
 
   <!-- Edit Modal -->
@@ -58,9 +48,12 @@
     <div class="modal-box">
       <h3 style="margin-bottom: 15px; color: #cc0000;">Edit Partner</h3>
       <input type="hidden" id="editDocId">
-      <div class="form-group"><label>Partner ID (যেমন: 1)</label><input id="editPartnerId" type="text"></div>
-      <div class="form-group"><label>Phone Number</label><input id="editPhone" type="text"></div>
-      <div class="form-group"><label>Area / Address</label><input id="editAddress" type="text"></div>
+      <div class="form-group"><label>Shop Name</label><input id="editShopName" type="text"></div>
+      <div class="form-group"><label>Partner ID (e.g. 1)</label><input id="editPartnerId" type="text"></div>
+      <div class="form-group"><label>Phone</label><input id="editPhone" type="text"></div>
+      <div class="form-group"><label>Area</label><input id="editAddress" type="text"></div>
+      <div class="form-group"><label>12 KG Price</label><input id="editPrice12" type="number"></div>
+      <div class="form-group"><label>24 KG Price</label><input id="editPrice24" type="number"></div>
       <button class="btn-save" onclick="savePartnerEdit()">Save Changes</button>
       <button onclick="closeModal()" style="width:100%; margin-top:10px; background:none; border:none; color:#888; cursor:pointer;">Cancel</button>
     </div>
@@ -92,19 +85,12 @@
       try {
         const q = query(collection(db, "orders"), orderBy("createdAt", "desc"));
         const snapshot = await getDocs(q);
-        if (snapshot.empty) { listEl.innerHTML = '<p style="text-align:center;">কোনো অর্ডার নেই।</p>'; return; }
         listEl.innerHTML = snapshot.docs.map(docSnap => {
           const order = docSnap.data();
-          const statusClass = order.status === 'delivered' ? 'status-delivered' : 'status-pending';
           return `
             <div class="admin-card">
-              <div class="admin-header">
-                <span style="font-weight:700;">অর্ডার: ${docSnap.id.slice(0, 6)}...</span>
-                <span class="status-badge ${statusClass}">${order.status}</span>
-              </div>
               <p><strong>কাস্টমার:</strong> ${order.customerName} (${order.customerPhone})</p>
-              <p><strong>ঠিকানা:</strong> ${order.customerAddress}</p>
-              <p><strong>পার্টনার আইডি:</strong> ${order.partnerId} | <strong>গ্যাস:</strong> ${order.cylinderSize}</p>
+              <p><strong>ঠিকানা:</strong> ${order.customerAddress} | <strong>পার্টনার:</strong> ${order.partnerId}</p>
             </div>`;
         }).join('');
       } catch (error) { listEl.innerHTML = `<p style="color:red;">Error: ${error.message}</p>`; }
@@ -119,11 +105,11 @@
           return `
             <div class="partner-card">
               <div>
-                <p><strong>ID:</strong> ${docSnap.id.slice(0,8)}... | <strong>Partner ID:</strong> ${p.partnerId || 'N/A'}</p>
-                <p><strong>Phone:</strong> ${p.phone || 'Not set'} | <strong>Area:</strong> ${p.address || 'Not set'}</p>
+                <p><strong>${p.shopName || 'No Name'}</strong> (ID: ${p.partnerId || 'N/A'})</p>
+                <p>12kg: ${p.price12 || '-'} | 24kg: ${p.price24 || '-'}</p>
               </div>
               <div>
-                <button class="btn-edit" onclick="openEditModal('${docSnap.id}', '${p.partnerId || ''}', '${p.phone || ''}', '${p.address || ''}')"><i class="fa-solid fa-pen"></i></button>
+                <button class="btn-edit" onclick="openEditModal('${docSnap.id}', '${p.partnerId || ''}', '${p.shopName || ''}', '${p.phone || ''}', '${p.address || ''}', '${p.price12 || ''}', '${p.price24 || ''}')"><i class="fa-solid fa-pen"></i></button>
                 <button class="btn-delete" onclick="deletePartner('${docSnap.id}')"><i class="fa-solid fa-trash"></i></button>
               </div>
             </div>`;
@@ -131,11 +117,14 @@
       } catch (error) { listEl.innerHTML = `<p style="color:red;">Error: ${error.message}</p>`; }
     }
 
-    window.openEditModal = function(docId, partnerId, phone, address) {
+    window.openEditModal = function(docId, partnerId, shopName, phone, address, price12, price24) {
       document.getElementById('editDocId').value = docId;
       document.getElementById('editPartnerId').value = partnerId;
+      document.getElementById('editShopName').value = shopName;
       document.getElementById('editPhone').value = phone;
       document.getElementById('editAddress').value = address;
+      document.getElementById('editPrice12').value = price12;
+      document.getElementById('editPrice24').value = price24;
       document.getElementById('editModal').classList.add('active');
     };
 
@@ -143,19 +132,22 @@
 
     window.savePartnerEdit = async function() {
       const docId = document.getElementById('editDocId').value;
-      const partnerId = document.getElementById('editPartnerId').value;
-      const phone = document.getElementById('editPhone').value;
-      const address = document.getElementById('editAddress').value;
-
       try {
-        await updateDoc(doc(db, "users", docId), { partnerId: partnerId, phone: phone, address: address });
+        await updateDoc(doc(db, "users", docId), {
+          partnerId: document.getElementById('editPartnerId').value,
+          shopName: document.getElementById('editShopName').value,
+          phone: document.getElementById('editPhone').value,
+          address: document.getElementById('editAddress').value,
+          price12: Number(document.getElementById('editPrice12').value) || 0,
+          price24: Number(document.getElementById('editPrice24').value) || 0
+        });
         alert("সফলভাবে আপডেট হয়েছে!");
         closeModal(); loadAllPartners();
       } catch (error) { alert("সমস্যা: " + error.message); }
     };
 
     window.deletePartner = async function(docId) {
-      if(!confirm("আপনি কি নিশ্চিত এই পার্টনারকে ডিলিট করতে চান?")) return;
+      if(!confirm("ডিলিট করতে চান?")) return;
       try {
         await deleteDoc(doc(db, "users", docId));
         alert("ডিলিট হয়েছে!"); loadAllPartners();
