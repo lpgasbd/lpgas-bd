@@ -11,24 +11,23 @@
     .dash-tabs { display: flex; border-bottom: 2px solid #eee; margin-bottom: 20px; overflow-x: auto; }
     .dash-tab { padding: 10px 20px; cursor: pointer; font-weight: 700; color: #666; border-bottom: 2px solid transparent; margin-bottom: -2px; white-space: nowrap; }
     .dash-tab.active { color: #cc0000; border-bottom-color: #cc0000; }
-    
     .order-card { background: white; border-left: 5px solid #cc0000; border-radius: 8px; padding: 16px; margin-bottom: 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
     .action-btns { display: flex; gap: 10px; margin-top: 15px; }
     .btn-call { flex: 1; background: #0066cc; color: white; text-decoration: none; padding: 10px; border-radius: 6px; text-align: center; font-weight: 700; font-size: 14px; }
     .btn-done { flex: 1; background: #25D366; color: white; border: none; padding: 10px; border-radius: 6px; font-weight: 700; font-size: 14px; cursor: pointer; }
-    
     .form-card { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
     .form-group { margin-bottom: 15px; }
     .form-group label { display: block; font-weight: 700; font-size: 13px; margin-bottom: 5px; }
     .form-group input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; outline: none; }
     .btn-save { background: #cc0000; color: white; border: none; padding: 12px; border-radius: 6px; font-weight: 700; width: 100%; cursor: pointer; margin-top: 15px; }
     
-    /* Dynamic Brand Rows */
-    .brand-row { display: flex; gap: 8px; margin-bottom: 10px; align-items: center; background: #f8f9fa; padding: 10px; border-radius: 8px; border: 1px solid #eee; }
-    .brand-row input { flex: 1; padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 13px; }
-    .brand-row input[type="number"] { width: 80px; flex: none; }
-    .btn-del-row { background: #dc3545; color: white; border: none; width: 30px; height: 30px; border-radius: 4px; cursor: pointer; display: flex; justify-content: center; align-items: center; }
-    .btn-add { background: #e6f0fa; color: #0066cc; border: 1px dashed #0066cc; padding: 10px; border-radius: 6px; font-weight: 700; cursor: pointer; width: 100%; margin-bottom: 15px; }
+    /* নতুন ব্র্যান্ড কার্ড ডিজাইন */
+    .brand-card-ui { background: #fff; border: 1.5px solid #eee; border-radius: 8px; padding: 15px; margin-bottom: 15px; position: relative; box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
+    .brand-card-ui .delete-btn { position: absolute; top: 10px; right: 10px; background: #dc3545; color: white; border: none; border-radius: 4px; padding: 6px 10px; cursor: pointer; }
+    .price-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-top: 10px; }
+    .price-grid div label { font-size: 11px; color: #555; display: block; margin-bottom: 3px; }
+    .price-grid input { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 13px; }
+    .btn-add { background: #e6f0fa; color: #0066cc; border: 1px dashed #0066cc; padding: 12px; border-radius: 6px; font-weight: 700; cursor: pointer; width: 100%; margin-bottom: 15px; }
   </style>
 </head>
 <body>
@@ -58,9 +57,8 @@
         <div class="form-group"><label>এলাকা (Area)</label><input id="pArea" placeholder="যেমন: ধানমন্ডি"></div>
         
         <hr style="margin: 15px 0; border: none; border-top: 1px dashed #ccc;">
-        <p style="font-size: 14px; font-weight: 700; margin-bottom: 10px; color: #0066cc;">কোম্পানি ও দাম (সার্ভিস চার্জ সহ)</p>
+        <p style="font-size: 14px; font-weight: 700; margin-bottom: 10px; color: #0066cc;">আপনার কোম্পানি ও দাম (সার্ভিস চার্জ সহ)</p>
         
-        <!-- ডাইনামিক ব্র্যান্ড লিস্ট -->
         <div id="brandContainer"></div>
         <button type="button" class="btn-add" onclick="addBrandRow()"><i class="fa-solid fa-plus"></i> নতুন কোম্পানি যোগ করুন</button>
         
@@ -76,7 +74,7 @@
 
     let currentUser = null;
     let myPartnerId = null;
-    let currentBrands = []; // ব্র্যান্ড ডেটা জমা রাখার অ্যারে
+    let currentBrands = []; 
 
     onAuthStateChanged(auth, async (user) => {
       if (!user) { window.location.href = "partner-login.html"; } 
@@ -103,52 +101,56 @@
           document.getElementById('pPhone').value = data.phone || '';
           document.getElementById('pArea').value = data.address || '';
           
-          currentBrands = data.brands || []; // ফায়ারবেস থেকে ব্র্যান্ড নেওয়া
-          renderBrandRows(); // ব্র্যান্ড রেন্ডার করা
+          currentBrands = data.brands || []; 
+          renderBrandRows(); 
         }
         if (myPartnerId) { loadOrders(); }
       } catch (error) { console.error(error); }
     }
 
-    // ব্র্যান্ড রেন্ডার করার ফাংশন
+    // ব্র্যান্ড কার্ড রেন্ডার করার নতুন ফাংশন
     function renderBrandRows() {
       const container = document.getElementById('brandContainer');
       if(currentBrands.length === 0) {
-        container.innerHTML = '<p style="font-size:12px; color:#888; text-align:center;">কোনো কোম্পানি যোগ করা হয়নি।</p>';
+        container.innerHTML = '<p style="font-size:12px; color:#888; text-align:center; margin-bottom:10px;">কোনো কোম্পানি যোগ করা হয়নি। নিচের বাটনে ক্লিক করুন।</p>';
         return;
       }
       container.innerHTML = currentBrands.map((b, index) => `
-        <div class="brand-row">
-          <input type="text" placeholder="কোম্পানি (Omera)" value="${b.name || ''}" oninput="updateBrand(${index}, 'name', this.value)">
-          <input type="number" placeholder="১২কেজি" value="${b.price12 || ''}" oninput="updateBrand(${index}, 'price12', this.value)">
-          <input type="number" placeholder="২৫কেজি" value="${b.price25 || ''}" oninput="updateBrand(${index}, 'price25', this.value)">
-          <button type="button" class="btn-del-row" onclick="removeBrand(${index})"><i class="fa-solid fa-trash"></i></button>
+        <div class="brand-card-ui">
+          <button type="button" class="delete-btn" onclick="removeBrand(${index})"><i class="fa-solid fa-trash"></i></button>
+          <div class="form-group" style="margin-bottom: 10px; padding-right: 40px;">
+            <label>কোম্পানির নাম</label>
+            <input type="text" placeholder="যেমন: Omera" value="${b.name || ''}" oninput="updateBrand(${index}, 'name', this.value)">
+          </div>
+          <label style="font-size:12px; font-weight:700; color:#333;">দাম সেট করুন (যেটা নেই ফাঁকা রাখুন)</label>
+          <div class="price-grid">
+            <div><label>৫.৫ কেজি</label><input type="number" placeholder="৳" value="${b.price5 || ''}" oninput="updateBrand(${index}, 'price5', this.value)"></div>
+            <div><label>১২ কেজি</label><input type="number" placeholder="৳" value="${b.price12 || ''}" oninput="updateBrand(${index}, 'price12', this.value)"></div>
+            <div><label>১৫ কেজি</label><input type="number" placeholder="৳" value="${b.price15 || ''}" oninput="updateBrand(${index}, 'price15', this.value)"></div>
+            <div><label>২৫ কেজি</label><input type="number" placeholder="৳" value="${b.price25 || ''}" oninput="updateBrand(${index}, 'price25', this.value)"></div>
+            <div><label>৩৫ কেজি</label><input type="number" placeholder="৳" value="${b.price35 || ''}" oninput="updateBrand(${index}, 'price35', this.value)"></div>
+            <div><label>৪৫ কেজি</label><input type="number" placeholder="৳" value="${b.price45 || ''}" oninput="updateBrand(${index}, 'price45', this.value)"></div>
+          </div>
         </div>
       `).join('');
     }
 
-    // নতুন ব্র্যান্ড রো যোগ করা
     window.addBrandRow = function() {
-      currentBrands.push({ name: '', price12: '', price25: '' });
+      currentBrands.push({ name: '', price5: '', price12: '', price15: '', price25: '', price35: '', price45: '' });
       renderBrandRows();
     };
 
-    // ব্র্যান্ড ডিলিট করা
     window.removeBrand = function(index) {
       currentBrands.splice(index, 1);
       renderBrandRows();
     };
 
-    // ইনপুটে টাইপ করলে অ্যারে আপডেট হওয়া
     window.updateBrand = function(index, field, value) {
       currentBrands[index][field] = value;
     };
 
-    // প্রোফাইল সেভ করা
     window.saveProfile = async function() {
       const alertEl = document.getElementById('profileAlert');
-      
-      // খালি ব্র্যান্ড রো ফিল্টার করা
       const validBrands = currentBrands.filter(b => b.name.trim() !== '');
 
       try {
@@ -185,7 +187,7 @@
               <p><strong>কাস্টমার:</strong> ${order.customerName} (${order.customerPhone})</p>
               <p><strong>ঠিকানা:</strong> ${order.customerAddress}</p>
               <div style="background:#f8f9fa; padding:8px; border-radius:6px; margin: 10px 0;">
-                <strong>অর্ডার:</strong> ${order.brand} - ${order.cylinderSize} (${order.quantity} পিস)
+                <strong>অর্ডার:</strong> ${order.brand} - ${order.cylinderSize}
               </div>
               <div class="action-btns">
                 <a href="tel:${order.customerPhone}" class="btn-call"><i class="fa-solid fa-phone"></i> Call</a>
