@@ -10,10 +10,7 @@
     .logout-btn { background: white; color: #cc0000; border: none; padding: 8px 14px; border-radius: 8px; font-weight: 700; cursor: pointer; }
     .order-card { background: white; border-left: 5px solid #cc0000; border-radius: 8px; padding: 16px; margin-bottom: 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
     .order-header { display: flex; justify-content: space-between; margin-bottom: 10px; border-bottom: 1px dashed #eee; padding-bottom: 10px; }
-    .order-id { font-size: 12px; color: #888; }
     .order-status { background: #fff3cd; color: #856404; padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; text-transform: uppercase; }
-    .order-details p { font-size: 14px; color: #444; margin-bottom: 5px; }
-    .order-details strong { color: #222; }
     .action-btns { display: flex; gap: 10px; margin-top: 15px; }
     .btn-call { flex: 1; background: #0066cc; color: white; text-decoration: none; padding: 10px; border-radius: 6px; text-align: center; font-weight: 700; font-size: 14px; }
     .btn-done { flex: 1; background: #25D366; color: white; border: none; padding: 10px; border-radius: 6px; font-weight: 700; font-size: 14px; cursor: pointer; }
@@ -28,9 +25,7 @@
 
   <div class="container" style="margin-top: 20px;">
     <h2 class="section-title"><i class="fa-solid fa-box-open" style="color:#cc0000"></i> নতুন অর্ডার সমূহ</h2>
-    <div id="ordersList">
-      <p style="text-align:center; color:#888;">লোড হচ্ছে...</p>
-    </div>
+    <div id="ordersList"><p style="text-align:center; color:#888;">লোড হচ্ছে...</p></div>
   </div>
 
   <script type="module">
@@ -42,93 +37,60 @@
     let myPartnerId = null;
 
     onAuthStateChanged(auth, async (user) => {
-      if (!user) {
-        window.location.href = "partner-login.html"; 
-      } else {
-        currentUser = user;
-        await getPartnerIdAndLoadOrders();
-      }
+      if (!user) { window.location.href = "partner-login.html"; } 
+      else { currentUser = user; await getPartnerIdAndLoadOrders(); }
     });
 
     async function getPartnerIdAndLoadOrders() {
       const listEl = document.getElementById('ordersList');
-      if(!listEl) return; 
-      
       listEl.innerHTML = '<p style="text-align:center; color:#888;">লোড হচ্ছে...</p>';
-
       try {
         const userDocRef = doc(db, 'users', currentUser.uid);
         const userDocSnap = await getDoc(userDocRef);
-
         if (userDocSnap.exists() && userDocSnap.data().partnerId) {
           myPartnerId = userDocSnap.data().partnerId; 
         } else {
-          listEl.innerHTML = '<p style="text-align:center; color:red;">আপনার অ্যাকাউন্টের সাথে কোনো পার্টনার আইডি যুক্ত নেই। অ্যাডমিনের সাথে যোগাযোগ করুন।</p>';
-          return;
+          listEl.innerHTML = '<p style="text-align:center; color:red;">পার্টনার আইডি যুক্ত নেই।</p>'; return;
         }
 
-        const q = query(
-          collection(db, "orders"), 
-          where("partnerId", "==", myPartnerId), 
-          orderBy("createdAt", "desc")
-        );
-        
-        const querySnapshot = await getDocs(q);
+        const q = query(collection(db, "orders"), where("partnerId", "==", myPartnerId), orderBy("createdAt", "desc"));
+        const snapshot = await getDocs(q);
 
-        if (querySnapshot.empty) {
-          listEl.innerHTML = '<p style="text-align:center; color:#888;">আপনার জন্য এখনো কোনো নতুন অর্ডার আসেনি।</p>';
-          return;
-        }
+        if (snapshot.empty) { listEl.innerHTML = '<p style="text-align:center; color:#888;">কোনো নতুন অর্ডার নেই।</p>'; return; }
 
-        listEl.innerHTML = querySnapshot.docs.map(docSnap => {
+        listEl.innerHTML = snapshot.docs.map(docSnap => {
           const order = docSnap.data();
-          const orderId = docSnap.id;
           const date = order.createdAt ? order.createdAt.toDate().toLocaleString() : 'N/A';
-          
           return `
             <div class="order-card">
               <div class="order-header">
-                <span class="order-id">ID: ${orderId.slice(0, 6)}...</span>
+                <span style="font-size:12px; color:#888;">ID: ${docSnap.id.slice(0, 6)}...</span>
                 <span class="order-status">${order.status}</span>
               </div>
-              <div class="order-details">
-                <p><strong>নাম:</strong> ${order.customerName}</p>
-                <p><strong>ফোন:</strong> ${order.customerPhone}</p>
-                <p><strong>ঠিকানা:</strong> ${order.customerAddress}</p>
-                <p><strong>সিলিন্ডার:</strong> ${order.cylinderSize} (${order.quantity} পিস)</p>
-                <p style="font-size:12px; color:#888; margin-top:5px;">সময়: ${date}</p>
-              </div>
+              <p><strong>নাম:</strong> ${order.customerName}</p>
+              <p><strong>ফোন:</strong> ${order.customerPhone}</p>
+              <p><strong>ঠিকানা:</strong> ${order.customerAddress}</p>
+              <p><strong>সিলিন্ডার:</strong> ${order.cylinderSize} (${order.quantity} পিস)</p>
+              <p style="font-size:12px; color:#888; margin-top:5px;">সময়: ${date}</p>
               <div class="action-btns">
                 <a href="tel:${order.customerPhone}" class="btn-call"><i class="fa-solid fa-phone"></i> Call</a>
-                ${order.status === 'pending' 
-                  ? `<button class="btn-done" onclick="markDelivered('${orderId}')"><i class="fa-solid fa-check"></i> Delivered</button>` 
-                  : ''}
+                ${order.status === 'pending' ? `<button class="btn-done" onclick="markDelivered('${docSnap.id}')"><i class="fa-solid fa-check"></i> Delivered</button>` : ''}
               </div>
-            </div>
-          `;
+            </div>`;
         }).join('');
-
-      } catch (error) {
-        console.error("Error loading orders:", error);
-        listEl.innerHTML = `<p style="text-align:center; color:red; font-size:13px;">অর্ডার লোড করতে সমস্যা হয়েছে।<br>Error: ${error.message}</p>`;
-      }
+      } catch (error) { listEl.innerHTML = `<p style="color:red;">Error: ${error.message}</p>`; }
     }
 
     document.getElementById('logoutBtn').addEventListener('click', async () => {
-      await signOut(auth);
-      window.location.href = "partner-login.html";
+      await signOut(auth); window.location.href = "partner-login.html";
     });
 
     window.markDelivered = async function(orderId) {
-      if(!confirm("আপনি কি নিশ্চিত এই অর্ডারটি ডেলিভারি সম্পন্ন হয়েছে?")) return;
+      if(!confirm("ডেলিভারি সম্পন্ন হয়েছে?")) return;
       try {
-        const orderRef = doc(db, "orders", orderId);
-        await updateDoc(orderRef, { status: "delivered", deliveredAt: new Date() });
-        alert("অর্ডার সফলভাবে ডেলিভারি হয়েছে!");
-        getPartnerIdAndLoadOrders();
-      } catch (error) {
-        alert("আপডেট করতে সমস্যা হয়েছে: " + error.message);
-      }
+        await updateDoc(doc(db, "orders", orderId), { status: "delivered", deliveredAt: new Date() });
+        alert("সফল!"); getPartnerIdAndLoadOrders();
+      } catch (error) { alert("সমস্যা: " + error.message); }
     };
   </script>
 </body>
