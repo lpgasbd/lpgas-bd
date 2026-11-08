@@ -1,39 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Partner Dashboard — LPGas.bd</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="assets/css/style.css">
+  <style>
+    .logout-btn { background: white; color: #cc0000; border: none; padding: 8px 14px; border-radius: 8px; font-weight: 700; cursor: pointer; }
+    .order-card { background: white; border-left: 5px solid #cc0000; border-radius: 8px; padding: 16px; margin-bottom: 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+    .order-header { display: flex; justify-content: space-between; margin-bottom: 10px; border-bottom: 1px dashed #eee; padding-bottom: 10px; }
+    .order-id { font-size: 12px; color: #888; }
+    .order-status { background: #fff3cd; color: #856404; padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; }
+    .order-details p { font-size: 14px; color: #444; margin-bottom: 5px; }
+    .order-details strong { color: #222; }
+    .action-btns { display: flex; gap: 10px; margin-top: 15px; }
+    .btn-call { flex: 1; background: #0066cc; color: white; text-decoration: none; padding: 10px; border-radius: 6px; text-align: center; font-weight: 700; font-size: 14px; }
+    .btn-done { flex: 1; background: #25D366; color: white; border: none; padding: 10px; border-radius: 6px; font-weight: 700; font-size: 14px; cursor: pointer; }
+  </style>
+</head>
+<body>
+
+  <header class="header">
+    <div class="logo"><i class="fa-solid fa-fire"></i> LPGas<span>.bd</span></div>
+    <button class="logout-btn" id="logoutBtn">Logout</button>
+  </header>
+
+  <div class="container" style="margin-top: 20px;">
+    <h2 class="section-title"><i class="fa-solid fa-box-open" style="color:#cc0000"></i> নতুন অর্ডার সমূহ</h2>
+    <div id="ordersList">
+      <p style="text-align:center; color:#888;">লোড হচ্ছে...</p>
+    </div>
+  </div>
+
   <script type="module">
     import { auth, db } from './assets/js/firebase-config.js';
     import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
     import { collection, query, orderBy, getDocs, doc, getDoc, updateDoc, where } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
     let currentUser = null;
-    let myPartnerId = null; // এই পার্টনারের আইডি
+    let myPartnerId = null;
 
     // লগইন স্টেট চেক
     onAuthStateChanged(auth, async (user) => {
       if (!user) {
+        // লগইন না থাকলে সরাসরি লগইন পেজে পাঠিয়ে দিবে
         window.location.href = "partner-login.html"; 
       } else {
         currentUser = user;
-        await getPartnerIdAndLoadOrders(); // পার্টনারের আইডি খুঁজে বের করে অর্ডার আনবে
+        await getPartnerIdAndLoadOrders();
       }
     });
 
-    // পার্টনারের আইডি বের করা
+    // পার্টনারের আইডি বের করা এবং অর্ডার লোড করা
     async function getPartnerIdAndLoadOrders() {
       const listEl = document.getElementById('ordersList');
+      if(!listEl) return; // DOM লোড না হলে স্কিপ করবে
+      
       listEl.innerHTML = '<p style="text-align:center; color:#888;">লোড হচ্ছে...</p>';
 
       try {
-        // ১. 'users' কালেকশন থেকে এই লগইন করা ইউজারের প্রোফাইল বের করা
+        // ১. 'users' কালেকশন থেকে পার্টনারের আইডি বের করা
         const userDocRef = doc(db, 'users', currentUser.uid);
         const userDocSnap = await getDoc(userDocRef);
 
         if (userDocSnap.exists() && userDocSnap.data().partnerId) {
-          myPartnerId = userDocSnap.data().partnerId; // পার্টনার আইডি পেয়ে গেছি (যেমন: "1")
+          myPartnerId = userDocSnap.data().partnerId; 
         } else {
           listEl.innerHTML = '<p style="text-align:center; color:red;">আপনার অ্যাকাউন্টের সাথে কোনো পার্টনার আইডি যুক্ত নেই। অ্যাডমিনের সাথে যোগাযোগ করুন।</p>';
           return;
         }
 
-        // ২. এখন শুধু এই পার্টনারের অর্ডারগুলো খুঁজবো (where ফিল্টার ব্যবহার করে)
+        // ২. শুধু এই পার্টনারের অর্ডারগুলো খোঁজা
         const q = query(
           collection(db, "orders"), 
           where("partnerId", "==", myPartnerId), 
@@ -47,7 +85,7 @@
           return;
         }
 
-        // অর্ডারগুলো স্ক্রিনে দেখানো
+        // ৩. অর্ডারগুলো স্ক্রিনে দেখানো
         listEl.innerHTML = querySnapshot.docs.map(docSnap => {
           const order = docSnap.data();
           const orderId = docSnap.id;
@@ -77,16 +115,19 @@
         }).join('');
 
       } catch (error) {
-        console.error(error);
-        listEl.innerHTML = `<p style="text-align:center; color:red;">অর্ডার লোড করতে সমস্যা হয়েছে। (সম্ভবত Index তৈরি হতে হবে, ব্রাউজারের Console চেক করুন)</p>`;
+        console.error("Error loading orders:", error);
+        listEl.innerHTML = `<p style="text-align:center; color:red; font-size:13px;">অর্ডার লোড করতে সমস্যা হয়েছে।<br>Error: ${error.message}</p>`;
       }
     }
 
-    // লগআউট
-    document.getElementById('logoutBtn').addEventListener('click', async () => {
-      await signOut(auth);
-      window.location.href = "partner-login.html";
-    });
+    // লগআউট বাটন ইভেন্ট
+    const logoutBtn = document.getElementById('logoutBtn');
+    if(logoutBtn) {
+      logoutBtn.addEventListener('click', async () => {
+        await signOut(auth);
+        window.location.href = "partner-login.html";
+      });
+    }
 
     // অর্ডার ডেলিভারি সম্পন্ন মার্ক করা
     window.markDelivered = async function(orderId) {
@@ -99,9 +140,12 @@
           deliveredAt: new Date()
         });
         alert("অর্ডার সফলভাবে ডেলিভারি হয়েছে!");
-        getPartnerIdAndLoadOrders(); // ড্যাশবোর্ড রিফ্রেশ
+        getPartnerIdAndLoadOrders();
       } catch (error) {
         alert("আপডেট করতে সমস্যা হয়েছে: " + error.message);
       }
     };
   </script>
+
+</body>
+</html>
