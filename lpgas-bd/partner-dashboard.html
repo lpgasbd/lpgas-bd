@@ -22,6 +22,8 @@
     .form-group label { display: block; font-weight: 700; font-size: 13px; margin-bottom: 5px; }
     .form-group input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; outline: none; }
     .btn-save { background: #cc0000; color: white; border: none; padding: 12px; border-radius: 6px; font-weight: 700; width: 100%; cursor: pointer; }
+    
+    .price-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
   </style>
 </head>
 <body>
@@ -37,27 +39,33 @@
       <div class="dash-tab" onclick="switchTab('profile')">My Profile & Price</div>
     </div>
 
-    <!-- Orders Tab -->
     <div id="tab-orders">
       <div id="ordersList"><p style="text-align:center; color:#888;">লোড হচ্ছে...</p></div>
     </div>
 
-    <!-- Profile Tab -->
     <div id="tab-profile" style="display: none;">
       <div class="form-card">
         <h3 style="margin-bottom: 15px; color: #cc0000;">প্রোফাইল ও দাম আপডেট করুন</h3>
         <div id="profileAlert" style="display:none; padding:10px; margin-bottom:10px; border-radius:6px;"></div>
         
         <div class="form-group"><label>দোকানের নাম (Shop Name)</label><input id="pShopName" placeholder="যেমন: করিম গ্যাস হাউজ"></div>
+        <div class="form-group"><label>কোম্পানির নাম (Brands Sold)</label><input id="pCompany" placeholder="যেমন: Omera, Bashundhara, Jamuna"></div>
         <div class="form-group"><label>ফোন নাম্বার</label><input id="pPhone" placeholder="017XXXXXXXX"></div>
         <div class="form-group"><label>এলাকা (Area)</label><input id="pArea" placeholder="যেমন: ধানমন্ডি"></div>
         
         <hr style="margin: 15px 0; border: none; border-top: 1px dashed #ccc;">
+        <p style="font-size: 13px; font-weight: 700; margin-bottom: 10px;">সিলিন্ডারের দাম (সার্ভিস চার্জ সহ)</p>
         
-        <div class="form-group"><label>১২ কেজি সিলিন্ডারের দাম (সার্ভিস চার্জ সহ)</label><input type="number" id="pPrice12" placeholder="যেমন: 2200"></div>
-        <div class="form-group"><label>২৪ কেজি সিলিন্ডারের দাম (সার্ভিস চার্জ সহ)</label><input type="number" id="pPrice24" placeholder="যেমন: 4200"></div>
+        <div class="price-grid">
+          <div class="form-group"><label>৫.৫ কেজি</label><input type="number" id="pPrice5" placeholder="৳"></div>
+          <div class="form-group"><label>১২ কেজি</label><input type="number" id="pPrice12" placeholder="৳"></div>
+          <div class="form-group"><label>১৫ কেজি</label><input type="number" id="pPrice15" placeholder="৳"></div>
+          <div class="form-group"><label>২৫ কেজি</label><input type="number" id="pPrice25" placeholder="৳"></div>
+          <div class="form-group"><label>৩৫ কেজি</label><input type="number" id="pPrice35" placeholder="৳"></div>
+          <div class="form-group"><label>৪৫ কেজি</label><input type="number" id="pPrice45" placeholder="৳"></div>
+        </div>
         
-        <button class="btn-save" onclick="saveProfile()">Save Changes</button>
+        <button class="btn-save" onclick="saveProfile()" style="margin-top: 15px;">Save Changes</button>
       </div>
     </div>
   </div>
@@ -72,10 +80,7 @@
 
     onAuthStateChanged(auth, async (user) => {
       if (!user) { window.location.href = "partner-login.html"; } 
-      else { 
-        currentUser = user; 
-        await loadProfileAndOrders(); 
-      }
+      else { currentUser = user; await loadProfileAndOrders(); }
     });
 
     window.switchTab = function(tab) {
@@ -93,12 +98,18 @@
         if (userDocSnap.exists()) {
           const data = userDocSnap.data();
           myPartnerId = data.partnerId;
-          // প্রোফাইল ফর্মে ডেটা বসানো
+          
           document.getElementById('pShopName').value = data.shopName || '';
+          document.getElementById('pCompany').value = data.companyName || '';
           document.getElementById('pPhone').value = data.phone || '';
           document.getElementById('pArea').value = data.address || '';
+          
+          document.getElementById('pPrice5').value = data.price5 || '';
           document.getElementById('pPrice12').value = data.price12 || '';
-          document.getElementById('pPrice24').value = data.price24 || '';
+          document.getElementById('pPrice15').value = data.price15 || '';
+          document.getElementById('pPrice25').value = data.price25 || '';
+          document.getElementById('pPrice35').value = data.price35 || '';
+          document.getElementById('pPrice45').value = data.price45 || '';
         }
         if (myPartnerId) { loadOrders(); }
       } catch (error) { console.error(error); }
@@ -109,10 +120,15 @@
       try {
         await updateDoc(doc(db, 'users', currentUser.uid), {
           shopName: document.getElementById('pShopName').value,
+          companyName: document.getElementById('pCompany').value,
           phone: document.getElementById('pPhone').value,
           address: document.getElementById('pArea').value,
+          price5: Number(document.getElementById('pPrice5').value) || 0,
           price12: Number(document.getElementById('pPrice12').value) || 0,
-          price24: Number(document.getElementById('pPrice24').value) || 0
+          price15: Number(document.getElementById('pPrice15').value) || 0,
+          price25: Number(document.getElementById('pPrice25').value) || 0,
+          price35: Number(document.getElementById('pPrice35').value) || 0,
+          price45: Number(document.getElementById('pPrice45').value) || 0
         });
         alertEl.style.display = 'block';
         alertEl.style.background = '#d4edda';
