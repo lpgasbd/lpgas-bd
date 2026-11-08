@@ -10,18 +10,16 @@
     .form-container { background: white; max-width: 500px; margin: 20px auto; padding: 24px; border-radius: 14px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid #eee; }
     .form-group { margin-bottom: 15px; }
     .form-group label { display: block; font-weight: 700; font-size: 14px; margin-bottom: 6px; color: #333; }
-    .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 12px; border: 1.5px solid #ccc; border-radius: 8px; font-size: 15px; outline: none; font-family: 'Inter', sans-serif; }
+    .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 12px; border: 1.5px solid #ccc; border-radius: 8px; font-size: 15px; outline: none; }
     .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: #cc0000; }
-    .submit-btn { width: 100%; background: #25D366; color: white; border: none; padding: 14px; border-radius: 8px; font-weight: 800; font-size: 16px; cursor: pointer; margin-top: 10px; display: flex; justify-content: center; align-items: center; gap: 8px; }
-    .submit-btn:hover { background: #1eb955; }
+    .submit-btn { width: 100%; background: #25D366; color: white; border: none; padding: 14px; border-radius: 8px; font-weight: 800; font-size: 16px; cursor: pointer; margin-top: 10px; }
     .back-link { display: inline-block; margin-bottom: 15px; color: #cc0000; text-decoration: none; font-weight: 700; }
   </style>
 </head>
 <body>
 
-  <!-- Header -->
   <header class="header">
-    <div class="logo"><i class="fa-solid fa-fire"></i> LPGas<span>.bd</span></div>
+    <a href="index.html" class="logo" style="text-decoration: none; color: white;"><i class="fa-solid fa-fire"></i> LPGas<span>.bd</span></a>
   </header>
 
   <div class="container" style="margin-top: 20px;">
@@ -32,8 +30,24 @@
       <p id="partnerNameDisplay" style="color: #666; font-size: 14px; margin-bottom: 20px;">লোড হচ্ছে...</p>
 
       <form id="orderForm">
-        <!-- পার্টনার আইডি লুকানো থাকবে -->
         <input type="hidden" id="partnerId" value="">
+        
+        <div class="form-group">
+          <label>সিলিন্ডারের সাইজ *</label>
+          <select id="cSize" required>
+            <option value="12kg">১২ কেজি (12 KG)</option>
+            <option value="24kg">২৪ কেজি (24 KG)</option>
+            <option value="35kg">৩৫ কেজি (35 KG)</option>
+            <option value="5kg">৫.৫ কেজি (5.5 KG)</option>
+            <option value="15kg">১৫ কেজি (15 KG)</option>
+            <option value="25kg">২৫ কেজি (25 KG)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>কতটি লাগবে? *</label>
+          <input type="number" id="cQuantity" value="1" min="1" required>
+        </div>
 
         <div class="form-group">
           <label>আপনার নাম *</label>
@@ -50,24 +64,6 @@
           <textarea id="cAddress" rows="2" placeholder="বাসা নং, রোড নং, এলাকা" required></textarea>
         </div>
 
-        <div class="form-group">
-          <label>সিলিন্ডারের সাইজ *</label>
-          <select id="cSize" required>
-            <option value="12kg">১২ কেজি (12 KG)</option>
-            <option value="24kg">২৪ কেজি (24 KG)</option>
-            <option value="35kg">৩৫ কেজি (35 KG)</option>
-          </select>
-        </div>
-
-        <div class="form-group">
-          <label>কতটি সিলিন্ডার লাগবে? *</label>
-          <input type="number" id="cQuantity" value="1" min="1" required>
-        </div>
-
-        <div class="form-group" style="background: #fff3cd; padding: 10px; border-radius: 8px; border: 1px solid #ffeeba;">
-          <p style="font-size: 12px; color: #856404; margin: 0;"><i class="fa-solid fa-circle-info"></i> ডেলিভারি চার্জ আলোচনা সাপেক্ষে। পার্টনার আপনার সাথে কথা বলে চার্জ কনফার্ম করবে।</p>
-        </div>
-
         <button type="submit" class="submit-btn" id="submitBtn">
           <i class="fa-solid fa-check-circle"></i> অর্ডার কনফার্ম করুন
         </button>
@@ -77,39 +73,22 @@
 
   <script type="module">
     import { db } from './assets/js/firebase-config.js';
-    import { collection, addDoc, doc, getDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-    // URL থেকে পার্টনার আইডি নেওয়া (যেমন: order.html?partnerId=1)
     const urlParams = new URLSearchParams(window.location.search);
     const partnerId = urlParams.get('partnerId');
 
     if (!partnerId) {
-      alert("ভুল লিংক! অনুগ্রহ করে হোমপেজ থেকে অর্ডার করুন।");
-      window.location.href = "index.html";
+      alert("ভুল লিংক!"); window.location.href = "index.html";
     }
 
     document.getElementById('partnerId').value = partnerId;
+    
+    const demoDealers = { '1': "Omera LPG Gas (Gulshan)", '2': "LPG Shop BD (Mirpur)", '3': "Shatota LPG" };
+    document.getElementById('partnerNameDisplay').innerText = `অর্ডার করছেন: ${demoDealers[partnerId] || 'পার্টনার'}`;
 
-    // পার্টনারের নাম লোড করা
-    async function loadPartnerName() {
-      try {
-        // আমরা আপাতত ডেমো ডেটা থেকে নাম দেখাচ্ছি, পরে ফায়ারবেস থেকে আসবে
-        const demoDealers = {
-          '1': "Omera LPG Gas (Gulshan)",
-          '2': "LPG Shop BD (Mirpur)",
-          '3': "Shatota LPG"
-        };
-        document.getElementById('partnerNameDisplay').innerText = `অর্ডার করছেন: ${demoDealers[partnerId] || 'পার্টনার'}`;
-      } catch (e) {
-        console.error(e);
-      }
-    }
-    loadPartnerName();
-
-    // ফর্ম সাবমিট ইভেন্ট
     document.getElementById('orderForm').addEventListener('submit', async (e) => {
       e.preventDefault();
-      
       const btn = document.getElementById('submitBtn');
       btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> প্রসেস হচ্ছে...';
       btn.disabled = true;
@@ -121,30 +100,20 @@
         customerAddress: document.getElementById('cAddress').value,
         cylinderSize: document.getElementById('cSize').value,
         quantity: Number(document.getElementById('cQuantity').value),
-        status: 'pending', // pending, accepted, delivered
+        status: 'pending', 
         createdAt: serverTimestamp()
       };
 
       try {
-        // ফায়ারবেসের 'orders' কালেকশনে ডেটা সেভ করা
         await addDoc(collection(db, 'orders'), orderData);
-        
         alert('আপনার অর্ডার সফলভাবে জমা হয়েছে! পার্টনার শীঘ্রই আপনাকে কল দিবে।');
-        
-        // সফল হলে হোয়াটসঅ্যাপে মেসেজ পাঠানোর অপশন (পার্টনারের নাম্বার পরে বসবে)
-        const waMsg = encodeURIComponent(`Hi, I placed an order on LPGas.bd.\nName: ${orderData.customerName}\nPhone: ${orderData.customerPhone}\nAddress: ${orderData.customerAddress}\nSize: ${orderData.cylinderSize}\nQty: ${orderData.quantity}`);
-        window.open(`https://wa.me/8801715331303?text=${waMsg}`, '_blank'); // আপাতত আপনার নাম্বার
-        
         window.location.href = "index.html";
-
       } catch (error) {
-        console.error("Error adding document: ", error);
-        alert('দুঃখিত, অর্ডারটি সেভ করা যায়নি। আবার চেষ্টা করুন।');
+        alert('দুঃখিত, অর্ডার সেভ করা যায়নি। আবার চেষ্টা করুন।');
         btn.innerHTML = '<i class="fa-solid fa-check-circle"></i> অর্ডার কনফার্ম করুন';
         btn.disabled = false;
       }
     });
   </script>
-
 </body>
 </html>
