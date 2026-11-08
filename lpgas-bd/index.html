@@ -93,11 +93,19 @@
           </div>
           <div class="btn-group">
             <button class="btn-order" onclick="goToOrder('${dealer.partnerId}')"><i class="fa-solid fa-bag-shopping"></i> Order Now</button>
+            <button class="btn-wa" onclick="contactWhatsApp('${dealer.shopName}')"><i class="fa-brands fa-whatsapp"></i> WhatsApp</button>
           </div>
         </div>
       `;
       }).join('');
     }
+
+    // WhatsApp বাটনের ফাংশন (আপনার নাম্বারে যাবে)
+    window.contactWhatsApp = function(shopName) {
+      const adminNumber = "8801917080000"; // আপনার নাম্বার
+      const msg = encodeURIComponent(`Hi LPGas.bd, I want to know more about the partner: ${shopName}. Please help me.`);
+      window.open(`https://wa.me/${adminNumber}?text=${msg}`, '_blank');
+    };
 
     window.searchDealers = function() {
       const area = document.getElementById('searchArea').value.toLowerCase();
