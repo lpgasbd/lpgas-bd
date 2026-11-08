@@ -12,6 +12,11 @@
     .form-group label { display: block; font-weight: 700; font-size: 14px; margin-bottom: 6px; color: #333; }
     .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 12px; border: 1.5px solid #ccc; border-radius: 8px; font-size: 15px; outline: none; }
     .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: #cc0000; }
+    
+    .location-btn { width: 100%; background: #e6f0fa; color: #0066cc; border: 1px solid #b3d4fc; padding: 12px; border-radius: 8px; font-weight: 700; font-size: 14px; cursor: pointer; margin-bottom: 10px; display: flex; justify-content: center; align-items: center; gap: 8px; }
+    .location-btn.success { background: #d4edda; color: #155724; border-color: #c3e6cb; }
+    .location-status { font-size: 12px; color: #666; text-align: center; margin-bottom: 15px; display: none; }
+
     .submit-btn { width: 100%; background: #25D366; color: white; border: none; padding: 14px; border-radius: 8px; font-weight: 800; font-size: 16px; cursor: pointer; margin-top: 10px; }
     .back-link { display: inline-block; margin-bottom: 15px; color: #cc0000; text-decoration: none; font-weight: 700; }
   </style>
@@ -31,6 +36,8 @@
 
       <form id="orderForm">
         <input type="hidden" id="partnerId" value="">
+        <input type="hidden" id="cLat" value="">
+        <input type="hidden" id="cLng" value="">
         
         <div class="form-group">
           <label>সিলিন্ডারের সাইজ *</label>
@@ -64,6 +71,16 @@
           <textarea id="cAddress" rows="2" placeholder="বাসা নং, রোড নং, এলাকা" required></textarea>
         </div>
 
+        <!-- লোকেশন বাধ্যতামূলক অপশন -->
+        <div class="form-group" style="background: #f8f9fa; padding: 15px; border-radius: 8px; border: 1px dashed #ccc;">
+          <label style="color: #cc0000;"><i class="fa-solid fa-location-dot"></i> আপনার লোকেশন শেয়ার করুন *</label>
+          <p style="font-size: 12px; color: #666; margin-bottom: 10px;">ডেলিভারি ম্যান যাতে সহজে আপনার বাসা খুঁজে পায়।</p>
+          <button type="button" class="location-btn" id="locBtn" onclick="getLocation()">
+            <i class="fa-solid fa-location-crosshairs"></i> লোকেশন নিন
+          </button>
+          <div class="location-status" id="locStatus">লোকেশন শেয়ার করা হয়েছে!</div>
+        </div>
+
         <button type="submit" class="submit-btn" id="submitBtn">
           <i class="fa-solid fa-check-circle"></i> অর্ডার কনফার্ম করুন
         </button>
@@ -84,11 +101,45 @@
 
     document.getElementById('partnerId').value = partnerId;
     
-    const demoDealers = { '1': "Omera LPG Gas (Gulshan)", '2': "LPG Shop BD (Mirpur)", '3': "Shatota LPG" };
+    const demoDealers = { '1': "Omera LPG (Gulshan)", '2': "LPG Shop BD (Mirpur)", '3': "Shatota LPG" };
     document.getElementById('partnerNameDisplay').innerText = `অর্ডার করছেন: ${demoDealers[partnerId] || 'পার্টনার'}`;
+
+    let locationCaptured = false;
+
+    // লোকেশন নেওয়ার ফাংশন
+    window.getLocation = function() {
+      const btn = document.getElementById('locBtn');
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> খোঁজা হচ্ছে...';
+      
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            document.getElementById('cLat').value = position.coords.latitude;
+            document.getElementById('cLng').value = position.coords.longitude;
+            locationCaptured = true;
+            
+            btn.classList.add('success');
+            btn.innerHTML = '<i class="fa-solid fa-check"></i> লোকেশন যুক্ত হয়েছে';
+            document.getElementById('locStatus').style.display = 'block';
+          },
+          (error) => {
+            alert("লোকেশন পাওয়া যায়নি। দয়া করে ফোনের GPS চালু করে পারমিশন দিন।");
+            btn.innerHTML = '<i class="fa-solid fa-location-crosshairs"></i> আবার চেষ্টা করুন';
+          }
+        );
+      } else {
+        alert("আপনার ব্রাউজার লোকেশন সাপোর্ট করে না।");
+      }
+    };
 
     document.getElementById('orderForm').addEventListener('submit', async (e) => {
       e.preventDefault();
+
+      if (!locationCaptured) {
+        alert("অর্ডার করতে হলে অবশ্যই 'লোকেশন নিন' বাটনে ক্লিক করে লোকেশন শেয়ার করতে হবে!");
+        return;
+      }
+
       const btn = document.getElementById('submitBtn');
       btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> প্রসেস হচ্ছে...';
       btn.disabled = true;
@@ -100,6 +151,8 @@
         customerAddress: document.getElementById('cAddress').value,
         cylinderSize: document.getElementById('cSize').value,
         quantity: Number(document.getElementById('cQuantity').value),
+        lat: document.getElementById('cLat').value,
+        lng: document.getElementById('cLng').value,
         status: 'pending', 
         createdAt: serverTimestamp()
       };
