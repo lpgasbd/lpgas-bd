@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LPGas.bd — Find Nearest LPG Gas</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+
+  <!-- Header -->
+  <header class="header">
+    <div class="logo"><i class="fa-solid fa-fire"></i> LPGas<span>.bd</span></div>
+    <div class="header-btns">
+      <a href="partner-login.html"><i class="fa-solid fa-store"></i> Partner Login</a>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="hero">
+    <h1>Find LPG Gas Near You</h1>
+    <p>Book your cylinder from trusted partners in your area</p>
+    <div class="search-box">
+      <i class="fa-solid fa-location-dot"></i>
+      <input type="text" id="searchArea" placeholder="Enter your area (e.g., Dhanmondi)">
+      <button onclick="searchDealers()">Near Me</button>
+    </div>
+  </section>
+
+  <!-- Dealer List -->
+  <div class="container">
+    <h2 class="section-title"><i class="fa-solid fa-store" style="color:#cc0000"></i> Available Partners Nearby</h2>
+    <div id="dealerList">
+      <!-- ডিলার কার্ড এখানে লোড হবে -->
+    </div>
+  </div>
+
+  <!-- Main Script (লোকাল টেস্টের জন্য) -->
+  <script>
+    const demoDealers = [
+      { id: '1', name: "Omera LPG Gas (Gulshan)", address: "Gulshan 1, Dhaka", phone: "8801715331303", price12: 2200, price24: 4200, wa: "8801715331303" },
+      { id: '2', name: "LPG Shop BD (Mirpur)", address: "Modina Tower, Mirpur", phone: "8801711385722", price12: 2150, price24: 4100, wa: "8801715331303" },
+      { id: '3', name: "Shatota LPG", address: "Banashree, Rampura", phone: "8801324956290", price12: 2250, price24: 4300, wa: "8801715331303" }
+    ];
+
+    const dealerListEl = document.getElementById('dealerList');
+
+    function renderDealers(dealers) {
+      if (dealers.length === 0) {
+        dealerListEl.innerHTML = `<p style="text-align:center; color:#888; margin-top:20px;">No partners found in this area.</p>`;
+        return;
+      }
+      
+      dealerListEl.innerHTML = dealers.map(dealer => `
+        <div class="dealer-card">
+          <div class="dealer-header">
+            <div class="dealer-name">${dealer.name}</div>
+            <div class="dealer-dist"><i class="fa-solid fa-location-dot"></i> 2 km</div>
+          </div>
+          <div class="dealer-info">
+            <span><i class="fa-solid fa-map-pin"></i> ${dealer.address}</span>
+            <span><i class="fa-solid fa-truck"></i> Home Delivery Available</span>
+          </div>
+          <div class="dealer-price">
+            12 KG: <span>৳ ${dealer.price12}</span> &nbsp;|&nbsp; 24 KG: <span>৳ ${dealer.price24}</span>
+          </div>
+          <div class="btn-group">
+            <button class="btn-order" onclick="goToOrder('${dealer.id}')"><i class="fa-solid fa-bag-shopping"></i> Order Now</button>
+            <button class="btn-wa" onclick="contactWhatsApp('${dealer.name}', '${dealer.wa}')"><i class="fa-brands fa-whatsapp"></i> WhatsApp</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function searchDealers() {
+      const area = document.getElementById('searchArea').value.toLowerCase();
+      if(!area) {
+        renderDealers(demoDealers);
+        return;
+      }
+      const filtered = demoDealers.filter(d => d.address.toLowerCase().includes(area));
+      renderDealers(filtered);
+    }
+
+    function goToOrder(id) {
+      window.location.href = `order.html?partnerId=${id}`;
+    }
+
+    function contactWhatsApp(partnerName, waNumber) {
+      const msg = encodeURIComponent(`Hi, I found you on LPGas.bd. I want to order a 12kg cylinder from ${partnerName}. Please confirm the price and delivery.`);
+      window.open(`https://wa.me/${waNumber}?text=${msg}`, '_blank');
+    }
+
+    // প্রথমবার লোড হওয়ার সময় ডিলার দেখানো
+    renderDealers(demoDealers);
+  </script>
+
+</body>
+</html>
