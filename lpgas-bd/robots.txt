@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /admin.html
+Disallow: /admin-login.html
+Disallow: /partner-dashboard.html
+
+Sitemap: https://lpgas.bd/sitemap.xml
