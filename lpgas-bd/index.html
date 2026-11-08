@@ -5,11 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>LPGas.bd — Find Nearest LPG Gas</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <!-- Leaflet Map CSS -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <link rel="stylesheet" href="assets/css/style.css">
   <style>
-    #map { height: 300px; width: 100%; border-radius: 12px; margin-bottom: 20px; display: none; z-index: 1;}
     @media (max-width: 600px) {
       .header { padding: 12px 15px; }
       .logo { font-size: 18px; }
@@ -39,83 +36,81 @@
   </section>
 
   <div class="container">
-    <!-- ম্যাপ এখানে দেখা যাবে -->
-    <div id="map"></div>
-
     <h2 class="section-title"><i class="fa-solid fa-store" style="color:#cc0000"></i> Available Partners Nearby</h2>
     <div id="dealerList"></div>
   </div>
 
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script>
-    // ডেমো ডেটাতে লোকেশন যোগ করা হলো
+    // ডেমো ডেটা
     const demoDealers = [
-      { id: '1', name: "Omera LPG (Gulshan)", address: "Gulshan 1, Dhaka", phone: "8801715331303", wa: "8801715331303", lat: 23.777, lng: 90.415 },
-      { id: '2', name: "LPG Shop BD (Mirpur)", address: "Modina Tower, Mirpur", phone: "8801711385722", wa: "8801715331303", lat: 23.806, lng: 90.368 },
-      { id: '3', name: "Shatota LPG", address: "Banashree, Rampura", phone: "8801324956290", wa: "8801715331303", lat: 23.759, lng: 90.438 }
+      { id: '1', name: "Omera LPG (Gulshan)", address: "Gulshan 1, Dhaka", phone: "8801715331303", wa: "8801715331303" },
+      { id: '2', name: "LPG Shop BD (Mirpur)", address: "Modina Tower, Mirpur", phone: "8801711385722", wa: "8801715331303" },
+      { id: '3', name: "Shatota LPG", address: "Banashree, Rampura", phone: "8801324956290", wa: "8801715331303" }
     ];
 
     const dealerListEl = document.getElementById('dealerList');
-    let map, markers = [];
 
     function renderDealers(dealers) {
       if (dealers.length === 0) {
-        dealerListEl.innerHTML = `<p style="text-align:center; color:#888;">No partners found.</p>`;
+        dealerListEl.innerHTML = `<p style="text-align:center; color:#888; margin-top:20px;">No partners found in this area.</p>`;
         return;
       }
+      
       dealerListEl.innerHTML = dealers.map(dealer => `
         <div class="dealer-card">
           <div class="dealer-header">
             <div class="dealer-name">${dealer.name}</div>
+            <div class="dealer-dist"><i class="fa-solid fa-location-dot"></i> 2 km</div>
           </div>
           <div class="dealer-info">
             <span><i class="fa-solid fa-map-pin"></i> ${dealer.address}</span>
+            <span><i class="fa-solid fa-truck"></i> Home Delivery Available</span>
           </div>
-          <div class="dealer-price" style="font-size: 13px; color: #666;">সার্ভিস চার্জ সহ দাম দেখতে অর্ডার করুন</div>
+          <div class="dealer-price" style="font-size: 13px; color: #666; margin-bottom: 15px;">
+            <i class="fa-solid fa-circle-info"></i> সার্ভিস চার্জ সহ দাম দেখতে অর্ডার করুন
+          </div>
           <div class="btn-group">
             <button class="btn-order" onclick="goToOrder('${dealer.id}')"><i class="fa-solid fa-bag-shopping"></i> Order Now</button>
+            <button class="btn-wa" onclick="contactWhatsApp('${dealer.name}', '${dealer.wa}')"><i class="fa-brands fa-whatsapp"></i> WhatsApp</button>
           </div>
         </div>
       `).join('');
     }
 
-    // সার্চ এবং ম্যাপ লজিক
     window.searchDealers = function() {
       const area = document.getElementById('searchArea').value.toLowerCase();
       
-      // লোকেশন সিমুলেশন
-      navigator.geolocation.getCurrentPosition((pos) => {
-        const userLat = pos.coords.latitude;
-        const userLng = pos.coords.longitude;
-        
-        document.getElementById('map').style.display = 'block';
-        
-        if (!map) {
-          map = L.map('map').setView([userLat, userLng], 12);
-          L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '© OpenStreetMap'
-          }).addTo(map);
-        } else {
-          map.setView([userLat, userLng], 12);
-        }
+      // লোকেশন বাটনে ক্লিক করলে শুধু মেসেজ দেখাবে এবং সব ডিলার লোড করবে
+      if(!area) {
+        document.getElementById('nearMeBtn').innerText = "Locating...";
+        if (navigator.geolocation) {
+          navigator.geolocation.getCurrentPosition(
+            (position) => {
+              document.getElementById('nearMeBtn').innerText = "Near Me";
+              alert("আপনার আশেপাশের পার্টনারদের দেখানো হচ্ছে।");
+              renderDealers(demoDealers); 
+            },
+            (error) => {
+              document.getElementById('nearMeBtn').innerText = "Near Me";
+              alert("লোকেশন পাওয়া যায়নি। ম্যানুয়ালি এলাকা লিখুন।");
+            }
+          );
+        } else { renderDealers(demoDealers); }
+        return;
+      }
 
-        // পুরনো মার্কার মুছে ফেলা
-        markers.forEach(m => map.removeLayer(m));
-        markers = [];
-
-        demoDealers.forEach(d => {
-          const marker = L.marker([d.lat, d.lng]).addTo(map)
-            .bindPopup(`<b>${d.name}</b><br>${d.address}<br><button onclick="goToOrder('${d.id}')" style="margin-top:5px; background:#cc0000; color:#fff; border:none; padding:5px 10px; border-radius:5px; cursor:pointer;">Order Now</button>`);
-          markers.push(marker);
-        });
-
-        renderDealers(demoDealers);
-      }, (err) => {
-        alert("লোকেশন পারমিশন দিন।");
-      });
+      // যদি ম্যানুয়ালি এলাকা লেখা হয়
+      const filtered = demoDealers.filter(d => d.address.toLowerCase().includes(area));
+      renderDealers(filtered);
     };
 
     window.goToOrder = function(id) { window.location.href = `order.html?partnerId=${id}`; };
+    
+    window.contactWhatsApp = function(partnerName, waNumber) {
+      const msg = encodeURIComponent(`Hi, I found you on LPGas.bd. I want to order from ${partnerName}. Please confirm.`);
+      window.open(`https://wa.me/${waNumber}?text=${msg}`, '_blank');
+    };
+
     renderDealers(demoDealers);
 
     // ৫ বার ক্লিকে অ্যাডমিন প্যানেল
