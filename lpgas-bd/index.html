@@ -64,14 +64,16 @@
       }
       
       dealerListEl.innerHTML = dealers.map(dealer => {
-        // ব্র্যান্ড ও দাম দেখানোর লজিক
         let brandsHtml = '';
         if(dealer.brands && dealer.brands.length > 0) {
-          brandsHtml = dealer.brands.map(b => `
-            <div style="font-size: 13px; margin-bottom: 3px;">
-              <i class="fa-solid fa-tags" style="color:#0066cc"></i> <strong>${b.name}</strong>: ১২কেজি ৳${b.price12 || 'N/A'}, ২৫কেজি ৳${b.price25 || 'N/A'}
-            </div>
-          `).join('');
+          brandsHtml = dealer.brands.map(b => {
+            let prices = [];
+            if(b.price12) prices.push(`১২কেজি: ৳${b.price12}`);
+            if(b.price25) prices.push(`২৫কেজি: ৳${b.price25}`);
+            return `<div style="font-size: 13px; margin-bottom: 5px;">
+              <i class="fa-solid fa-tags" style="color:#0066cc"></i> <strong>${b.name}</strong>: ${prices.join(' | ')}
+            </div>`;
+          }).join('');
         } else {
           brandsHtml = '<span style="font-size:12px; color:#888;">দাম আপডেট করা হয়নি</span>';
         }
@@ -80,12 +82,13 @@
         <div class="dealer-card">
           <div class="dealer-header">
             <div class="dealer-name">${dealer.shopName || 'New Partner'}</div>
+            <div class="dealer-dist" style="background:#e6f0fa; color:#0066cc; font-size:11px;">${dealer.thana || ''}, ${dealer.district || ''}</div>
           </div>
           <div class="dealer-info">
-            <span><i class="fa-solid fa-map-pin"></i> ${dealer.address || 'Location not set'}</span>
             <span><i class="fa-solid fa-phone"></i> ${dealer.phone || 'Phone not set'}</span>
           </div>
           <div class="dealer-price" style="margin-bottom: 15px; background: #f8f9fa; padding: 10px; border-radius: 8px;">
+            <p style="font-size: 11px; color: #cc0000; margin-bottom: 5px; font-weight: 700;">* দাম সার্ভিস চার্জ সহ</p>
             ${brandsHtml}
           </div>
           <div class="btn-group">
@@ -99,7 +102,10 @@
     window.searchDealers = function() {
       const area = document.getElementById('searchArea').value.toLowerCase();
       if(!area) { renderDealers(allPartners); return; }
-      const filtered = allPartners.filter(d => (d.address || '').toLowerCase().includes(area));
+      const filtered = allPartners.filter(d => 
+        (d.district || '').toLowerCase().includes(area) || 
+        (d.thana || '').toLowerCase().includes(area)
+      );
       renderDealers(filtered);
     };
 
