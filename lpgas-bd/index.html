@@ -3,7 +3,26 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>LPGas.bd — Find Nearest LPG Gas</title>
+  
+  <!-- SEO Meta Tags -->
+  <title>LPGas.bd | Buy LPG Gas Cylinder Online in Bangladesh</title>
+  <meta name="description" content="Find and order LPG gas cylinders from trusted local dealers near you. Home delivery available across Bangladesh. Compare prices of Omera, Bashundhara, Jamuna and more.">
+  <meta name="keywords" content="LPG gas Bangladesh, order gas cylinder online, Omera LPG, Bashundhara gas, LPG delivery Dhaka, gas cylinder price">
+  <meta name="author" content="LPGas.bd">
+  
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://lpgas.bd/">
+  <meta property="og:title" content="LPGas.bd | Buy LPG Gas Cylinder Online">
+  <meta property="og:description" content="Order LPG gas from trusted partners near you. Fast home delivery.">
+  <meta property="og:image" content="https://lpgas.bd/assets/images/banner.jpg">
+
+  <!-- Twitter -->
+  <meta property="twitter:card" content="summary_large_image">
+  <meta property="twitter:title" content="LPGas.bd | Buy LPG Gas Cylinder Online">
+  <meta property="twitter:description" content="Order LPG gas from trusted partners near you. Fast home delivery.">
+  <meta property="twitter:image" content="https://lpgas.bd/assets/images/banner.jpg">
+
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="assets/css/style.css">
   <style>
@@ -100,9 +119,8 @@
       }).join('');
     }
 
-    // WhatsApp বাটনের ফাংশন (আপনার নাম্বারে যাবে)
     window.contactWhatsApp = function(shopName) {
-      const adminNumber = "8801917080000"; // আপনার নাম্বার
+      const adminNumber = "8801917080000"; 
       const msg = encodeURIComponent(`Hi LPGas.bd, I want to know more about the partner: ${shopName}. Please help me.`);
       window.open(`https://wa.me/${adminNumber}?text=${msg}`, '_blank');
     };
@@ -124,7 +142,7 @@
 
     loadRealPartners();
 
-    // ৫ বার ক্লিকে অ্যাডমিন প্যানেল
+    // ৫ বার ক্লিকে অ্যাডমিন লগইন পেজ
     let clickCount = 0;
     let clickTimer;
     document.getElementById('mainLogo').addEventListener('click', function(e) {
@@ -132,7 +150,7 @@
       clickCount++;
       clearTimeout(clickTimer);
       clickTimer = setTimeout(() => { clickCount = 0; }, 1000); 
-      if (clickCount === 5) { window.location.href = "admin.html"; clickCount = 0; }
+      if (clickCount === 5) { window.location.href = "admin-login.html"; clickCount = 0; }
     });
   </script>
 </body>
