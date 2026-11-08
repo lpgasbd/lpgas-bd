@@ -47,11 +47,11 @@
     let allPartners = [];
     const dealerListEl = document.getElementById('dealerList');
 
-    // ফায়ারবেস থেকে পার্টনার লোড করা
     async function loadRealPartners() {
       try {
         const snapshot = await getDocs(collection(db, "users"));
-        allPartners = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        // শুধু তাদের দেখাবো যাদের partnerId আছে
+        allPartners = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })).filter(p => p.partnerId);
         renderDealers(allPartners);
       } catch (error) {
         dealerListEl.innerHTML = `<p style="text-align:center; color:red;">ডেটা লোড করতে সমস্যা হয়েছে।</p>`;
@@ -68,13 +68,14 @@
         <div class="dealer-card">
           <div class="dealer-header">
             <div class="dealer-name">${dealer.shopName || 'New Partner'}</div>
+            <div class="dealer-dist" style="background:#e6f0fa; color:#0066cc;"><i class="fa-solid fa-tags"></i> ${dealer.companyName || 'Multi-brand'}</div>
           </div>
           <div class="dealer-info">
             <span><i class="fa-solid fa-map-pin"></i> ${dealer.address || 'Location not set'}</span>
             <span><i class="fa-solid fa-phone"></i> ${dealer.phone || 'Phone not set'}</span>
           </div>
-          <div class="dealer-price">
-            12 KG: <span>৳ ${dealer.price12 || 'N/A'}</span> &nbsp;|&nbsp; 24 KG: <span>৳ ${dealer.price24 || 'N/A'}</span>
+          <div class="dealer-price" style="font-size: 14px; margin-bottom: 15px;">
+            ১২ কেজি: <span>৳ ${dealer.price12 || 'N/A'}</span> &nbsp;|&nbsp; ২৫ কেজি: <span>৳ ${dealer.price25 || 'N/A'}</span>
           </div>
           <div class="btn-group">
             <button class="btn-order" onclick="goToOrder('${dealer.partnerId}')"><i class="fa-solid fa-bag-shopping"></i> Order Now</button>
