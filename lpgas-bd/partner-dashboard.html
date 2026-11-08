@@ -11,7 +11,7 @@
     .order-card { background: white; border-left: 5px solid #cc0000; border-radius: 8px; padding: 16px; margin-bottom: 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
     .order-header { display: flex; justify-content: space-between; margin-bottom: 10px; border-bottom: 1px dashed #eee; padding-bottom: 10px; }
     .order-id { font-size: 12px; color: #888; }
-    .order-status { background: #fff3cd; color: #856404; padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; }
+    .order-status { background: #fff3cd; color: #856404; padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; text-transform: uppercase; }
     .order-details p { font-size: 14px; color: #444; margin-bottom: 5px; }
     .order-details strong { color: #222; }
     .action-btns { display: flex; gap: 10px; margin-top: 15px; }
@@ -22,7 +22,7 @@
 <body>
 
   <header class="header">
-    <div class="logo"><i class="fa-solid fa-fire"></i> LPGas<span>.bd</span></div>
+    <a href="index.html" class="logo" style="text-decoration: none; color: white;"><i class="fa-solid fa-fire"></i> LPGas<span>.bd</span></a>
     <button class="logout-btn" id="logoutBtn">Logout</button>
   </header>
 
@@ -39,42 +39,37 @@
     import { collection, query, orderBy, getDocs, doc, getDoc, updateDoc, where } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
     let currentUser = null;
-    let myPartnerid = null;
+    let myPartnerId = null;
 
-    // লগইন স্টেট চেক
     onAuthStateChanged(auth, async (user) => {
       if (!user) {
-        // লগইন না থাকলে সরাসরি লগইন পেজে পাঠিয়ে দিবে
         window.location.href = "partner-login.html"; 
       } else {
         currentUser = user;
-        await getPartneridAndLoadOrders();
+        await getPartnerIdAndLoadOrders();
       }
     });
 
-    // পার্টনারের আইডি বের করা এবং অর্ডার লোড করা
-    async function getPartneridAndLoadOrders() {
+    async function getPartnerIdAndLoadOrders() {
       const listEl = document.getElementById('ordersList');
-      if(!listEl) return; // DOM লোড না হলে স্কিপ করবে
+      if(!listEl) return; 
       
       listEl.innerHTML = '<p style="text-align:center; color:#888;">লোড হচ্ছে...</p>';
 
       try {
-        // ১. 'users' কালেকশন থেকে পার্টনারের আইডি বের করা
         const userDocRef = doc(db, 'users', currentUser.uid);
         const userDocSnap = await getDoc(userDocRef);
 
-        if (userDocSnap.exists() && userDocSnap.data().partnerid) {
-          myPartnerid = userDocSnap.data().partnerid; 
+        if (userDocSnap.exists() && userDocSnap.data().partnerId) {
+          myPartnerId = userDocSnap.data().partnerId; 
         } else {
           listEl.innerHTML = '<p style="text-align:center; color:red;">আপনার অ্যাকাউন্টের সাথে কোনো পার্টনার আইডি যুক্ত নেই। অ্যাডমিনের সাথে যোগাযোগ করুন।</p>';
           return;
         }
 
-        // ২. শুধু এই পার্টনারের অর্ডারগুলো খোঁজা
         const q = query(
           collection(db, "orders"), 
-          where("partnerid", "==", myPartnerid), 
+          where("partnerId", "==", myPartnerId), 
           orderBy("createdAt", "desc")
         );
         
@@ -85,7 +80,6 @@
           return;
         }
 
-        // ৩. অর্ডারগুলো স্ক্রিনে দেখানো
         listEl.innerHTML = querySnapshot.docs.map(docSnap => {
           const order = docSnap.data();
           const orderId = docSnap.id;
@@ -95,7 +89,7 @@
             <div class="order-card">
               <div class="order-header">
                 <span class="order-id">ID: ${orderId.slice(0, 6)}...</span>
-                <span class="order-status">${order.status.toUpperCase()}</span>
+                <span class="order-status">${order.status}</span>
               </div>
               <div class="order-details">
                 <p><strong>নাম:</strong> ${order.customerName}</p>
@@ -120,32 +114,22 @@
       }
     }
 
-    // লগআউট বাটন ইভেন্ট
-    const logoutBtn = document.getElementById('logoutBtn');
-    if(logoutBtn) {
-      logoutBtn.addEventListener('click', async () => {
-        await signOut(auth);
-        window.location.href = "partner-login.html";
-      });
-    }
+    document.getElementById('logoutBtn').addEventListener('click', async () => {
+      await signOut(auth);
+      window.location.href = "partner-login.html";
+    });
 
-    // অর্ডার ডেলিভারি সম্পন্ন মার্ক করা
     window.markDelivered = async function(orderId) {
       if(!confirm("আপনি কি নিশ্চিত এই অর্ডারটি ডেলিভারি সম্পন্ন হয়েছে?")) return;
-      
       try {
         const orderRef = doc(db, "orders", orderId);
-        await updateDoc(orderRef, {
-          status: "delivered",
-          deliveredAt: new Date()
-        });
+        await updateDoc(orderRef, { status: "delivered", deliveredAt: new Date() });
         alert("অর্ডার সফলভাবে ডেলিভারি হয়েছে!");
-        getPartneridAndLoadOrders();
+        getPartnerIdAndLoadOrders();
       } catch (error) {
         alert("আপডেট করতে সমস্যা হয়েছে: " + error.message);
       }
     };
   </script>
-
 </body>
 </html>
