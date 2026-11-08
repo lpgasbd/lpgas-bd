@@ -20,8 +20,8 @@
     .form-card { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
     .form-group { margin-bottom: 15px; }
     .form-group label { display: block; font-weight: 700; font-size: 13px; margin-bottom: 5px; }
-    .form-group input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; outline: none; }
-    .btn-save { background: #cc0000; color: white; border: none; padding: 12px; border-radius: 6px; font-weight: 700; width: 100%; cursor: pointer; }
+    .form-group input, .form-group select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; outline: none; }
+    .btn-save { background: #cc0000; color: white; border: none; padding: 12px; border-radius: 6px; font-weight: 700; width: 100%; cursor: pointer; margin-top: 15px; }
     
     .price-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
   </style>
@@ -49,23 +49,30 @@
         <div id="profileAlert" style="display:none; padding:10px; margin-bottom:10px; border-radius:6px;"></div>
         
         <div class="form-group"><label>দোকানের নাম (Shop Name)</label><input id="pShopName" placeholder="যেমন: করিম গ্যাস হাউজ"></div>
-        <div class="form-group"><label>কোম্পানির নাম (Brands Sold)</label><input id="pCompany" placeholder="যেমন: Omera, Bashundhara, Jamuna"></div>
         <div class="form-group"><label>ফোন নাম্বার</label><input id="pPhone" placeholder="017XXXXXXXX"></div>
         <div class="form-group"><label>এলাকা (Area)</label><input id="pArea" placeholder="যেমন: ধানমন্ডি"></div>
         
         <hr style="margin: 15px 0; border: none; border-top: 1px dashed #ccc;">
-        <p style="font-size: 13px; font-weight: 700; margin-bottom: 10px;">সিলিন্ডারের দাম (সার্ভিস চার্জ সহ)</p>
         
+        <!-- কোম্পানি ১ -->
+        <p style="font-size: 14px; font-weight: 700; margin-bottom: 10px; color: #0066cc;">কোম্পানি ১</p>
+        <div class="form-group"><label>কোম্পানির নাম</label><input id="pComp1" placeholder="যেমন: Omera"></div>
         <div class="price-grid">
-          <div class="form-group"><label>৫.৫ কেজি</label><input type="number" id="pPrice5" placeholder="৳"></div>
-          <div class="form-group"><label>১২ কেজি</label><input type="number" id="pPrice12" placeholder="৳"></div>
-          <div class="form-group"><label>১৫ কেজি</label><input type="number" id="pPrice15" placeholder="৳"></div>
-          <div class="form-group"><label>২৫ কেজি</label><input type="number" id="pPrice25" placeholder="৳"></div>
-          <div class="form-group"><label>৩৫ কেজি</label><input type="number" id="pPrice35" placeholder="৳"></div>
-          <div class="form-group"><label>৪৫ কেজি</label><input type="number" id="pPrice45" placeholder="৳"></div>
+          <div class="form-group"><label>১২ কেজি দাম (সার্ভিস চার্জ সহ)</label><input type="number" id="pComp1Price12" placeholder="৳"></div>
+          <div class="form-group"><label>২৫ কেজি দাম (সার্ভিস চার্জ সহ)</label><input type="number" id="pComp1Price25" placeholder="৳"></div>
+        </div>
+
+        <hr style="margin: 15px 0; border: none; border-top: 1px dashed #ccc;">
+
+        <!-- কোম্পানি ২ -->
+        <p style="font-size: 14px; font-weight: 700; margin-bottom: 10px; color: #0066cc;">কোম্পানি ২ (ঐচ্ছিক)</p>
+        <div class="form-group"><label>কোম্পানির নাম</label><input id="pComp2" placeholder="যেমন: Bashundhara"></div>
+        <div class="price-grid">
+          <div class="form-group"><label>১২ কেজি দাম</label><input type="number" id="pComp2Price12" placeholder="৳"></div>
+          <div class="form-group"><label>২৫ কেজি দাম</label><input type="number" id="pComp2Price25" placeholder="৳"></div>
         </div>
         
-        <button class="btn-save" onclick="saveProfile()" style="margin-top: 15px;">Save Changes</button>
+        <button class="btn-save" onclick="saveProfile()">Save Changes</button>
       </div>
     </div>
   </div>
@@ -100,16 +107,18 @@
           myPartnerId = data.partnerId;
           
           document.getElementById('pShopName').value = data.shopName || '';
-          document.getElementById('pCompany').value = data.companyName || '';
           document.getElementById('pPhone').value = data.phone || '';
           document.getElementById('pArea').value = data.address || '';
           
-          document.getElementById('pPrice5').value = data.price5 || '';
-          document.getElementById('pPrice12').value = data.price12 || '';
-          document.getElementById('pPrice15').value = data.price15 || '';
-          document.getElementById('pPrice25').value = data.price25 || '';
-          document.getElementById('pPrice35').value = data.price35 || '';
-          document.getElementById('pPrice45').value = data.price45 || '';
+          // ব্র্যান্ড ডেটা লোড (যদি থাকে)
+          if(data.brands) {
+            document.getElementById('pComp1').value = data.brands[0]?.name || '';
+            document.getElementById('pComp1Price12').value = data.brands[0]?.price12 || '';
+            document.getElementById('pComp1Price25').value = data.brands[0]?.price25 || '';
+            document.getElementById('pComp2').value = data.brands[1]?.name || '';
+            document.getElementById('pComp2Price12').value = data.brands[1]?.price12 || '';
+            document.getElementById('pComp2Price25').value = data.brands[1]?.price25 || '';
+          }
         }
         if (myPartnerId) { loadOrders(); }
       } catch (error) { console.error(error); }
@@ -117,23 +126,34 @@
 
     window.saveProfile = async function() {
       const alertEl = document.getElementById('profileAlert');
+      
+      const brands = [];
+      if(document.getElementById('pComp1').value) {
+        brands.push({
+          name: document.getElementById('pComp1').value,
+          price12: Number(document.getElementById('pComp1Price12').value) || 0,
+          price25: Number(document.getElementById('pComp1Price25').value) || 0
+        });
+      }
+      if(document.getElementById('pComp2').value) {
+        brands.push({
+          name: document.getElementById('pComp2').value,
+          price12: Number(document.getElementById('pComp2Price12').value) || 0,
+          price25: Number(document.getElementById('pComp2Price25').value) || 0
+        });
+      }
+
       try {
         await updateDoc(doc(db, 'users', currentUser.uid), {
           shopName: document.getElementById('pShopName').value,
-          companyName: document.getElementById('pCompany').value,
           phone: document.getElementById('pPhone').value,
           address: document.getElementById('pArea').value,
-          price5: Number(document.getElementById('pPrice5').value) || 0,
-          price12: Number(document.getElementById('pPrice12').value) || 0,
-          price15: Number(document.getElementById('pPrice15').value) || 0,
-          price25: Number(document.getElementById('pPrice25').value) || 0,
-          price35: Number(document.getElementById('pPrice35').value) || 0,
-          price45: Number(document.getElementById('pPrice45').value) || 0
+          brands: brands
         });
         alertEl.style.display = 'block';
         alertEl.style.background = '#d4edda';
         alertEl.style.color = '#155724';
-        alertEl.innerText = 'সফলভাবে আপডেট হয়েছে!';
+        alertEl.innerText = 'সফলভাবে আপডেট হয়েছে!';
         setTimeout(() => { alertEl.style.display = 'none'; }, 3000);
       } catch (error) {
         alertEl.style.display = 'block';
@@ -156,7 +176,10 @@
             <div class="order-card">
               <p><strong>কাস্টমার:</strong> ${order.customerName} (${order.customerPhone})</p>
               <p><strong>ঠিকানা:</strong> ${order.customerAddress}</p>
-              <p><strong>গ্যাস:</strong> ${order.cylinderSize} (${order.quantity} পিস)</p>
+              <div style="background:#f8f9fa; padding:8px; border-radius:6px; margin: 10px 0;">
+                <strong>অর্ডার:</strong>
+                <p>${order.brand} - ${order.cylinderSize} (${order.quantity} পিস)</p>
+              </div>
               <div class="action-btns">
                 <a href="tel:${order.customerPhone}" class="btn-call"><i class="fa-solid fa-phone"></i> Call</a>
                 ${order.status === 'pending' ? `<button class="btn-done" onclick="markDelivered('${docSnap.id}')"><i class="fa-solid fa-check"></i> Delivered</button>` : ''}
@@ -171,7 +194,7 @@
     });
 
     window.markDelivered = async function(orderId) {
-      if(!confirm("ডেলিভারি সম্পন্ন হয়েছে?")) return;
+      if(!confirm("ডেলিভারি সম্পন্ন হয়েছে?")) return;
       try {
         await updateDoc(doc(db, "orders", orderId), { status: "delivered", deliveredAt: new Date() });
         alert("সফল!"); loadOrders();
