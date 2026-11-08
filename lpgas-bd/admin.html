@@ -12,20 +12,16 @@
     .dash-tab { padding: 10px 20px; cursor: pointer; font-weight: 700; color: #666; border-bottom: 2px solid transparent; margin-bottom: -2px; }
     .dash-tab.active { color: #cc0000; border-bottom-color: #cc0000; }
     
-    /* Orders */
     .admin-card { background: white; border-radius: 10px; padding: 15px; margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); border-left: 4px solid #cc0000; }
     .admin-header { display: flex; justify-content: space-between; margin-bottom: 8px; border-bottom: 1px solid #eee; padding-bottom: 8px; }
     .status-badge { padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; text-transform: uppercase; }
     .status-pending { background: #fff3cd; color: #856404; }
     .status-delivered { background: #d4edda; color: #155724; }
     
-    /* Partners */
     .partner-card { background: white; border-radius: 10px; padding: 15px; margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); border-left: 4px solid #0066cc; display: flex; justify-content: space-between; align-items: center; }
-    .partner-card p { font-size: 14px; margin-bottom: 5px; color: #333; }
     .btn-edit { background: #f0ad4e; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-weight: 700; cursor: pointer; font-size: 12px; }
     .btn-delete { background: #d9534f; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-weight: 700; cursor: pointer; font-size: 12px; margin-left: 5px; }
     
-    /* Edit Modal */
     .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 999; display: none; align-items: center; justify-content: center; padding: 16px; }
     .modal-overlay.active { display: flex; }
     .modal-box { background: white; border-radius: 12px; padding: 24px; width: 100%; max-width: 400px; position: relative; }
@@ -48,12 +44,10 @@
       <div class="dash-tab" onclick="switchTab('partners')">Partners List</div>
     </div>
 
-    <!-- Orders Tab -->
     <div id="tab-orders">
       <div id="allOrdersList"><p style="text-align:center; color:#888;">লোড হচ্ছে...</p></div>
     </div>
 
-    <!-- Partners Tab -->
     <div id="tab-partners" style="display: none;">
       <div id="allPartnersList"><p style="text-align:center; color:#888;">লোড হচ্ছে...</p></div>
     </div>
@@ -64,7 +58,7 @@
     <div class="modal-box">
       <h3 style="margin-bottom: 15px; color: #cc0000;">Edit Partner</h3>
       <input type="hidden" id="editDocId">
-      <div class="form-group"><label>Partner ID (e.g. 1)</label><input id="editPartnerId" type="text"></div>
+      <div class="form-group"><label>Partner ID (যেমন: 1)</label><input id="editPartnerId" type="text"></div>
       <div class="form-group"><label>Phone Number</label><input id="editPhone" type="text"></div>
       <div class="form-group"><label>Area / Address</label><input id="editAddress" type="text"></div>
       <button class="btn-save" onclick="savePartnerEdit()">Save Changes</button>
@@ -83,11 +77,9 @@
     });
 
     document.getElementById('logoutBtn').addEventListener('click', async () => {
-      await signOut(auth);
-      window.location.href = "partner-login.html";
+      await signOut(auth); window.location.href = "partner-login.html";
     });
 
-    // ট্যাব পরিবর্তন
     window.switchTab = function(tab) {
       document.querySelectorAll('.dash-tab').forEach(t => t.classList.remove('active'));
       document.querySelectorAll('.dash-tab')[tab === 'orders' ? 0 : 1].classList.add('active');
@@ -95,7 +87,6 @@
       document.getElementById('tab-partners').style.display = tab === 'partners' ? 'block' : 'none';
     };
 
-    // অর্ডার লোড
     async function loadAllOrders() {
       const listEl = document.getElementById('allOrdersList');
       try {
@@ -119,7 +110,6 @@
       } catch (error) { listEl.innerHTML = `<p style="color:red;">Error: ${error.message}</p>`; }
     }
 
-    // পার্টনার লোড
     async function loadAllPartners() {
       const listEl = document.getElementById('allPartnersList');
       try {
@@ -141,7 +131,6 @@
       } catch (error) { listEl.innerHTML = `<p style="color:red;">Error: ${error.message}</p>`; }
     }
 
-    // এডিট মোডাল
     window.openEditModal = function(docId, partnerId, phone, address) {
       document.getElementById('editDocId').value = docId;
       document.getElementById('editPartnerId').value = partnerId;
@@ -152,7 +141,6 @@
 
     window.closeModal = function() { document.getElementById('editModal').classList.remove('active'); };
 
-    // পার্টনার এডিট সেভ
     window.savePartnerEdit = async function() {
       const docId = document.getElementById('editDocId').value;
       const partnerId = document.getElementById('editPartnerId').value;
@@ -160,21 +148,17 @@
       const address = document.getElementById('editAddress').value;
 
       try {
-        const partnerRef = doc(db, "users", docId);
-        await updateDoc(partnerRef, { partnerId: partnerId, phone: phone, address: address });
+        await updateDoc(doc(db, "users", docId), { partnerId: partnerId, phone: phone, address: address });
         alert("সফলভাবে আপডেট হয়েছে!");
-        closeModal();
-        loadAllPartners();
+        closeModal(); loadAllPartners();
       } catch (error) { alert("সমস্যা: " + error.message); }
     };
 
-    // পার্টনার ডিলিট
     window.deletePartner = async function(docId) {
       if(!confirm("আপনি কি নিশ্চিত এই পার্টনারকে ডিলিট করতে চান?")) return;
       try {
         await deleteDoc(doc(db, "users", docId));
-        alert("পার্টনার ডিলিট হয়েছে!");
-        loadAllPartners();
+        alert("ডিলিট হয়েছে!"); loadAllPartners();
       } catch (error) { alert("সমস্যা: " + error.message); }
     };
   </script>
