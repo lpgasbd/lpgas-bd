@@ -11,22 +11,34 @@
     .dash-tabs { display: flex; border-bottom: 2px solid #eee; margin-bottom: 20px; overflow-x: auto; }
     .dash-tab { padding: 10px 20px; cursor: pointer; font-weight: 700; color: #666; border-bottom: 2px solid transparent; margin-bottom: -2px; white-space: nowrap; }
     .dash-tab.active { color: #cc0000; border-bottom-color: #cc0000; }
-    .order-card { background: white; border-left: 5px solid #cc0000; border-radius: 8px; padding: 16px; margin-bottom: 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
-    .action-btns { display: flex; gap: 10px; margin-top: 15px; }
+    
+    /* অর্ডার কার্ড ডিজাইন */
+    .order-card { background: white; border-left: 5px solid #cc0000; border-radius: 8px; padding: 16px; margin-bottom: 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); position: relative; }
+    .action-btns { display: flex; gap: 10px; margin-top: 15px; flex-wrap: wrap; }
     .btn-call { flex: 1; background: #0066cc; color: white; text-decoration: none; padding: 10px; border-radius: 6px; text-align: center; font-weight: 700; font-size: 14px; }
     .btn-done { flex: 1; background: #25D366; color: white; border: none; padding: 10px; border-radius: 6px; font-weight: 700; font-size: 14px; cursor: pointer; }
+    .btn-pdf { background: #f0ad4e; color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 700; }
+    .btn-del-order { background: #dc3545; color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; }
+    .order-top-actions { position: absolute; top: 15px; right: 15px; display: flex; gap: 5px; }
+
+    /* ফর্ম ও ব্র্যান্ড ডিজাইন */
     .form-card { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
     .form-group { margin-bottom: 15px; }
     .form-group label { display: block; font-weight: 700; font-size: 13px; margin-bottom: 5px; }
     .form-group input, .form-group select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; outline: none; }
     .search-input { margin-bottom: 5px !important; background: #f8f9fa; border-color: #0066cc !important; }
     .btn-save { background: #cc0000; color: white; border: none; padding: 12px; border-radius: 6px; font-weight: 700; width: 100%; cursor: pointer; margin-top: 15px; }
+    
     .brand-card-ui { background: #fff; border: 1.5px solid #eee; border-radius: 8px; padding: 15px; margin-bottom: 15px; position: relative; box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
     .brand-card-ui .delete-btn { position: absolute; top: 10px; right: 10px; background: #dc3545; color: white; border: none; border-radius: 4px; padding: 6px 10px; cursor: pointer; }
     .price-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-top: 10px; }
     .price-grid div label { font-size: 11px; color: #555; display: block; margin-bottom: 3px; }
     .price-grid input { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 13px; }
     .btn-add { background: #e6f0fa; color: #0066cc; border: 1px dashed #0066cc; padding: 12px; border-radius: 6px; font-weight: 700; cursor: pointer; width: 100%; margin-bottom: 15px; }
+
+    /* কাস্টমার লিস্ট */
+    .customer-row { display: flex; justify-content: space-between; align-items: center; background: white; padding: 15px; border-radius: 8px; margin-bottom: 10px; border: 1px solid #eee; }
+    .customer-info p { font-size: 14px; margin-bottom: 3px; color: #333; }
   </style>
 </head>
 <body>
@@ -40,12 +52,15 @@
     <div class="dash-tabs">
       <div class="dash-tab active" onclick="switchTab('orders')">My Orders</div>
       <div class="dash-tab" onclick="switchTab('profile')">My Profile & Price</div>
+      <div class="dash-tab" onclick="switchTab('customers')">Customers</div>
     </div>
 
+    <!-- Orders Tab -->
     <div id="tab-orders">
       <div id="ordersList"><p style="text-align:center; color:#888;">লোড হচ্ছে...</p></div>
     </div>
 
+    <!-- Profile Tab -->
     <div id="tab-profile" style="display: none;">
       <div class="form-card">
         <h3 style="margin-bottom: 15px; color: #cc0000;">প্রোফাইল ও দাম আপডেট করুন</h3>
@@ -79,20 +94,30 @@
         <button class="btn-save" onclick="saveProfile()">Save Changes</button>
       </div>
     </div>
+
+    <!-- Customers Tab -->
+    <div id="tab-customers" style="display: none;">
+      <div class="form-group" style="background: white; padding: 15px; border-radius: 8px; border: 1px solid #eee; margin-bottom: 20px;">
+        <label>কাস্টমার খুঁজুন (নাম বা ফোন নাম্বার)</label>
+        <input type="text" id="customerSearch" placeholder="🔍 সার্চ করুন..." oninput="filterCustomers()" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px;">
+      </div>
+      <div id="customersList"><p style="text-align:center; color:#888;">লোড হচ্ছে...</p></div>
+    </div>
   </div>
 
   <script type="module">
     import { auth, db } from './assets/js/firebase-config.js';
     import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-    import { collection, query, orderBy, getDocs, doc, getDoc, updateDoc, where } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { collection, query, orderBy, getDocs, doc, getDoc, updateDoc, deleteDoc, where } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
     let currentUser = null;
     let myPartnerId = null;
     let currentBrands = []; 
     let locationData = {};
     let allDistricts = [];
+    let myOrders = []; // অর্ডার জমা রাখার জন্য
+    let myCustomers = []; // কাস্টমার জমা রাখার জন্য
 
-    // জেলা লোড করা
     fetch('./assets/js/bd-locations.json')
       .then(res => res.json())
       .then(data => {
@@ -109,23 +134,19 @@
       });
     }
 
-    // জেলা সার্চ
     document.getElementById('pDistrictSearch').addEventListener('input', (e) => {
       const val = e.target.value.toLowerCase();
       const filtered = allDistricts.filter(d => d.toLowerCase().includes(val));
       renderDistricts(filtered);
     });
 
-    // থানা সার্চ
     document.getElementById('pThanaSearch').addEventListener('input', (e) => {
       const val = e.target.value.toLowerCase();
       const district = document.getElementById('pDistrict').value;
       if (!district) return;
-      
       const thanaSelect = document.getElementById('pThana');
       const allThanas = locationData[district] || [];
       const filtered = allThanas.filter(t => t.toLowerCase().includes(val));
-      
       thanaSelect.innerHTML = '<option value="">থানা সিলেক্ট করুন</option>';
       filtered.forEach(t => { thanaSelect.innerHTML += `<option value="${t}">${t}</option>`; });
     });
@@ -134,7 +155,6 @@
       const district = document.getElementById(districtId).value;
       const thanaSelect = document.getElementById(thanaId);
       thanaSelect.innerHTML = '<option value="">থানা সিলেক্ট করুন</option>';
-      
       if (district && locationData[district]) {
         locationData[district].sort().forEach(thana => {
           thanaSelect.innerHTML += `<option value="${thana}">${thana}</option>`;
@@ -149,9 +169,14 @@
 
     window.switchTab = function(tab) {
       document.querySelectorAll('.dash-tab').forEach(t => t.classList.remove('active'));
-      document.querySelectorAll('.dash-tab')[tab === 'orders' ? 0 : 1].classList.add('active');
+      const idx = tab === 'orders' ? 0 : (tab === 'profile' ? 1 : 2);
+      document.querySelectorAll('.dash-tab')[idx].classList.add('active');
+      
       document.getElementById('tab-orders').style.display = tab === 'orders' ? 'block' : 'none';
       document.getElementById('tab-profile').style.display = tab === 'profile' ? 'block' : 'none';
+      document.getElementById('tab-customers').style.display = tab === 'customers' ? 'block' : 'none';
+
+      if(tab === 'customers') { processCustomers(); }
     };
 
     async function loadProfileAndOrders() {
@@ -169,9 +194,7 @@
           if (data.district) {
             document.getElementById('pDistrict').value = data.district;
             window.loadThanas('pDistrict', 'pThana');
-            if (data.thana) {
-              document.getElementById('pThana').value = data.thana;
-            }
+            if (data.thana) { document.getElementById('pThana').value = data.thana; }
           }
           
           currentBrands = data.brands || []; 
@@ -194,7 +217,7 @@
             <label>কোম্পানির নাম</label>
             <input type="text" placeholder="যেমন: Omera" value="${b.name || ''}" oninput="updateBrand(${index}, 'name', this.value)">
           </div>
-          <label style="font-size:12px; font-weight:700; color:#333;">দাম সেট করুন (যেটা নেই ফাঁকা রাখুন)</label>
+          <label style="font-size:12px; font-weight:700; color:#333;">দাম সেট করুন (সার্ভিস চার্জ সহ)</label>
           <div class="price-grid">
             <div><label>৫.৫ কেজি</label><input type="number" placeholder="৳" value="${b.price5 || ''}" oninput="updateBrand(${index}, 'price5', this.value)"></div>
             <div><label>১২ কেজি</label><input type="number" placeholder="৳" value="${b.price12 || ''}" oninput="updateBrand(${index}, 'price12', this.value)"></div>
@@ -251,35 +274,37 @@
       }
     };
 
+    // অর্ডার লোড ও রেন্ডার
     async function loadOrders() {
       const listEl = document.getElementById('ordersList');
       try {
         const q = query(collection(db, "orders"), where("partnerId", "==", myPartnerId), orderBy("createdAt", "desc"));
         const snapshot = await getDocs(q);
+        myOrders = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })); // অ্যারে সেভ
+        
         if (snapshot.empty) { listEl.innerHTML = '<p style="text-align:center; color:#888;">কোনো নতুন অর্ডার নেই।</p>'; return; }
         
-        listEl.innerHTML = snapshot.docs.map(docSnap => {
-          const order = docSnap.data();
-          return `
+        listEl.innerHTML = myOrders.map(order => `
             <div class="order-card">
+              <div class="order-top-actions">
+                <button class="btn-pdf" onclick="downloadPDF('${order.id}')"><i class="fa-solid fa-file-pdf"></i></button>
+                <button class="btn-del-order" onclick="deleteOrder('${order.id}')"><i class="fa-solid fa-trash"></i></button>
+              </div>
               <p><strong>কাস্টমার:</strong> ${order.customerName} (${order.customerPhone})</p>
               <p><strong>ঠিকানা:</strong> ${order.customerAddress}</p>
               <div style="background:#f8f9fa; padding:8px; border-radius:6px; margin: 10px 0;">
-                <strong>অর্ডার:</strong> ${order.brand} - ${order.cylinderSize}
+                <strong>অর্ডার:</strong> ${order.brand} - ${order.cylinderSize} | <strong>দাম:</strong> ৳ ${order.price} (সার্ভিস চার্জ সহ)
               </div>
               <div class="action-btns">
                 <a href="tel:${order.customerPhone}" class="btn-call"><i class="fa-solid fa-phone"></i> Call</a>
-                ${order.status === 'pending' ? `<button class="btn-done" onclick="markDelivered('${docSnap.id}')"><i class="fa-solid fa-check"></i> Delivered</button>` : ''}
+                ${order.status === 'pending' ? `<button class="btn-done" onclick="markDelivered('${order.id}')"><i class="fa-solid fa-check"></i> Delivered</button>` : ''}
               </div>
-            </div>`;
-        }).join('');
+            </div>
+        `).join('');
       } catch (error) { listEl.innerHTML = `<p style="color:red;">Error: ${error.message}</p>`; }
     }
 
-    document.getElementById('logoutBtn').addEventListener('click', async () => {
-      await signOut(auth); window.location.href = "partner-login.html";
-    });
-
+    // ডেলিভারি স্ট্যাটাস
     window.markDelivered = async function(orderId) {
       if(!confirm("ডেলিভারি সম্পন্ন হয়েছে?")) return;
       try {
@@ -287,6 +312,92 @@
         alert("সফল!"); loadOrders();
       } catch (error) { alert("সমস্যা: " + error.message); }
     };
+
+    // অর্ডার ডিলিট
+    window.deleteOrder = async function(orderId) {
+      if(!confirm("আপনি কি নিশ্চিত এই অর্ডারটি ডিলিট করতে চান?")) return;
+      try {
+        await deleteDoc(doc(db, "orders", orderId));
+        alert("অর্ডার ডিলিট হয়েছে!"); loadOrders();
+      } catch (error) { alert("সমস্যা: " + error.message); }
+    };
+
+    // PDF ডাউনলোড
+    window.downloadPDF = function(orderId) {
+      const order = myOrders.find(o => o.id === orderId);
+      if(!order) return;
+
+      const htmlContent = `
+        <div style="font-family: Arial; padding: 20px;">
+          <h2 style="text-align:center; color:#cc0000;">LPGas.bd - Order Invoice</h2>
+          <hr>
+          <p><strong>Customer Name:</strong> ${order.customerName}</p>
+          <p><strong>Phone:</strong> ${order.customerPhone}</p>
+          <p><strong>Address:</strong> ${order.customerAddress}</p>
+          <p><strong>Brand:</strong> ${order.brand}</p>
+          <p><strong>Cylinder Size:</strong> ${order.cylinderSize}</p>
+          <p><strong>Total Price (Service Charge Included):</strong> ৳ ${order.price}</p>
+          <p><strong>Status:</strong> ${order.status.toUpperCase()}</p>
+          <hr>
+          <p style="text-align:center; font-size:12px; color:#888;">Generated from LPGas.bd Partner Dashboard</p>
+        </div>
+      `;
+
+      const opt = {
+        margin: 1, filename: `Order_${orderId.slice(0,6)}.pdf`, image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2 }, jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+      };
+
+      html2pdf().set(opt).from(htmlContent).save();
+    };
+
+    // কাস্টমার লিস্ট তৈরি করা (অর্ডার থেকে ডেটা নিয়ে)
+    function processCustomers() {
+      const uniqueCustomers = {};
+      myOrders.forEach(order => {
+        // ফোন নাম্বারকে ইউনিক আইডি হিসেবে ধরছি
+        if (!uniqueCustomers[order.customerPhone]) {
+          uniqueCustomers[order.customerPhone] = {
+            name: order.customerName,
+            phone: order.customerPhone,
+            address: order.customerAddress,
+            count: 0
+          };
+        }
+        uniqueCustomers[order.customerPhone].count++;
+      });
+      myCustomers = Object.values(uniqueCustomers);
+      renderCustomers(myCustomers);
+    }
+
+    function renderCustomers(customers) {
+      const listEl = document.getElementById('customersList');
+      if(customers.length === 0) {
+        listEl.innerHTML = '<p style="text-align:center; color:#888;">কোনো কাস্টমার পাওয়া যায়নি।</p>'; return;
+      }
+      listEl.innerHTML = customers.map(c => `
+        <div class="customer-row">
+          <div class="customer-info">
+            <p><strong>নাম:</strong> ${c.name}</p>
+            <p><strong>ফোন:</strong> ${c.phone}</p>
+            <p style="font-size:12px; color:#666;">মোট অর্ডার: ${c.count} বার</p>
+          </div>
+          <a href="tel:${c.phone}" style="background:#25D366; color:white; padding:8px 12px; border-radius:6px; text-decoration:none; font-size:12px; font-weight:700;"><i class="fa-solid fa-phone"></i></a>
+        </div>
+      `).join('');
+    }
+
+    window.filterCustomers = function() {
+      const query = document.getElementById('customerSearch').value.toLowerCase();
+      const filtered = myCustomers.filter(c => c.name.toLowerCase().includes(query) || c.phone.includes(query));
+      renderCustomers(filtered);
+    };
+
+    document.getElementById('logoutBtn').addEventListener('click', async () => {
+      await signOut(auth); window.location.href = "partner-login.html";
+    });
   </script>
+  <!-- html2pdf লাইব্রেরি -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </body>
 </html>
