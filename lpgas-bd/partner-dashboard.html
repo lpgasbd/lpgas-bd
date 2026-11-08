@@ -13,32 +13,38 @@
     .dash-tab.active { color: #cc0000; border-bottom-color: #cc0000; }
     
     /* অর্ডার কার্ড ডিজাইন */
-    .order-card { background: white; border-left: 5px solid #cc0000; border-radius: 8px; padding: 16px; margin-bottom: 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); position: relative; }
-    .action-btns { display: flex; gap: 10px; margin-top: 15px; flex-wrap: wrap; }
-    .btn-call { flex: 1; background: #0066cc; color: white; text-decoration: none; padding: 10px; border-radius: 6px; text-align: center; font-weight: 700; font-size: 14px; }
-    .btn-done { flex: 1; background: #25D366; color: white; border: none; padding: 10px; border-radius: 6px; font-weight: 700; font-size: 14px; cursor: pointer; }
-    .btn-pdf { background: #f0ad4e; color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 700; }
-    .btn-del-order { background: #dc3545; color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; }
-    .order-top-actions { position: absolute; top: 15px; right: 15px; display: flex; gap: 5px; }
+    .order-card { background: white; border-left: 4px solid #cc0000; border-radius: 10px; padding: 12px; margin-bottom: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+    .order-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
+    .customer-info p { font-size: 13px; color: #333; margin-bottom: 3px; }
+    .customer-info strong { color: #111; }
+    .top-actions { display: flex; gap: 6px; }
+    .btn-icon { width: 32px; height: 32px; border-radius: 6px; display: flex; align-items: center; justify-content: center; border: none; cursor: pointer; font-size: 13px; color: white; }
+    .btn-pdf { background: #f0ad4e; }
+    .btn-del { background: #dc3545; }
+    
+    .order-details-box { background: #f8f9fa; padding: 8px; border-radius: 6px; margin: 8px 0; font-size: 12px; border: 1px solid #eee;}
+    .action-btns { display: flex; gap: 8px; }
+    .btn-call { flex: 1; background: #0066cc; color: white; text-decoration: none; padding: 8px; border-radius: 6px; text-align: center; font-weight: 700; font-size: 13px; }
+    .btn-done { flex: 1; background: #25D366; color: white; border: none; padding: 8px; border-radius: 6px; font-weight: 700; font-size: 13px; cursor: pointer; }
 
     /* ফর্ম ও ব্র্যান্ড ডিজাইন */
-    .form-card { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
-    .form-group { margin-bottom: 15px; }
-    .form-group label { display: block; font-weight: 700; font-size: 13px; margin-bottom: 5px; }
-    .form-group input, .form-group select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; outline: none; }
+    .form-card { background: white; padding: 15px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+    .form-group { margin-bottom: 12px; }
+    .form-group label { display: block; font-weight: 700; font-size: 12px; margin-bottom: 4px; }
+    .form-group input, .form-group select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; outline: none; font-size: 14px;}
     .search-input { margin-bottom: 5px !important; background: #f8f9fa; border-color: #0066cc !important; }
     .btn-save { background: #cc0000; color: white; border: none; padding: 12px; border-radius: 6px; font-weight: 700; width: 100%; cursor: pointer; margin-top: 15px; }
     
-    .brand-card-ui { background: #fff; border: 1.5px solid #eee; border-radius: 8px; padding: 15px; margin-bottom: 15px; position: relative; box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
-    .brand-card-ui .delete-btn { position: absolute; top: 10px; right: 10px; background: #dc3545; color: white; border: none; border-radius: 4px; padding: 6px 10px; cursor: pointer; }
-    .price-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-top: 10px; }
-    .price-grid div label { font-size: 11px; color: #555; display: block; margin-bottom: 3px; }
-    .price-grid input { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 13px; }
-    .btn-add { background: #e6f0fa; color: #0066cc; border: 1px dashed #0066cc; padding: 12px; border-radius: 6px; font-weight: 700; cursor: pointer; width: 100%; margin-bottom: 15px; }
+    .brand-card-ui { background: #fff; border: 1.5px solid #eee; border-radius: 8px; padding: 12px; margin-bottom: 12px; position: relative; }
+    .brand-card-ui .delete-btn { position: absolute; top: 8px; right: 8px; background: #dc3545; color: white; border: none; border-radius: 4px; padding: 4px 8px; cursor: pointer; font-size: 11px;}
+    .price-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: 5px; }
+    .price-grid div label { font-size: 10px; color: #555; display: block; margin-bottom: 2px; }
+    .price-grid input { width: 100%; padding: 6px; border: 1px solid #ccc; border-radius: 4px; font-size: 12px; }
+    .btn-add { background: #e6f0fa; color: #0066cc; border: 1px dashed #0066cc; padding: 10px; border-radius: 6px; font-weight: 700; cursor: pointer; width: 100%; margin-bottom: 15px; font-size: 13px;}
 
     /* কাস্টমার লিস্ট */
-    .customer-row { display: flex; justify-content: space-between; align-items: center; background: white; padding: 15px; border-radius: 8px; margin-bottom: 10px; border: 1px solid #eee; }
-    .customer-info p { font-size: 14px; margin-bottom: 3px; color: #333; }
+    .customer-row { display: flex; justify-content: space-between; align-items: center; background: white; padding: 12px; border-radius: 8px; margin-bottom: 8px; border: 1px solid #eee; }
+    .customer-row p { font-size: 13px; margin-bottom: 3px; }
   </style>
 </head>
 <body>
@@ -48,25 +54,23 @@
     <button class="logout-btn" id="logoutBtn">Logout</button>
   </header>
 
-  <div class="container" style="margin-top: 20px;">
+  <div class="container" style="margin-top: 15px;">
     <div class="dash-tabs">
       <div class="dash-tab active" onclick="switchTab('orders')">My Orders</div>
-      <div class="dash-tab" onclick="switchTab('profile')">My Profile & Price</div>
+      <div class="dash-tab" onclick="switchTab('profile')">Profile & Price</div>
       <div class="dash-tab" onclick="switchTab('customers')">Customers</div>
     </div>
 
-    <!-- Orders Tab -->
     <div id="tab-orders">
       <div id="ordersList"><p style="text-align:center; color:#888;">লোড হচ্ছে...</p></div>
     </div>
 
-    <!-- Profile Tab -->
     <div id="tab-profile" style="display: none;">
       <div class="form-card">
-        <h3 style="margin-bottom: 15px; color: #cc0000;">প্রোফাইল ও দাম আপডেট করুন</h3>
-        <div id="profileAlert" style="display:none; padding:10px; margin-bottom:10px; border-radius:6px;"></div>
+        <h3 style="margin-bottom: 12px; color: #cc0000; font-size: 18px;">প্রোফাইল ও দাম আপডেট</h3>
+        <div id="profileAlert" style="display:none; padding:10px; margin-bottom:10px; border-radius:6px; font-size: 13px;"></div>
         
-        <div class="form-group"><label>দোকানের নাম (Shop Name)</label><input id="pShopName" placeholder="যেমন: করিম গ্যাস হাউজ"></div>
+        <div class="form-group"><label>দোকানের নাম</label><input id="pShopName" placeholder="যেমন: করিম গ্যাস হাউজ"></div>
         <div class="form-group"><label>ফোন নাম্বার</label><input id="pPhone" placeholder="017XXXXXXXX"></div>
         
         <div class="form-group">
@@ -86,7 +90,7 @@
         </div>
         
         <hr style="margin: 15px 0; border: none; border-top: 1px dashed #ccc;">
-        <p style="font-size: 14px; font-weight: 700; margin-bottom: 10px; color: #0066cc;">আপনার কোম্পানি ও দাম (সার্ভিস চার্জ সহ)</p>
+        <p style="font-size: 13px; font-weight: 700; margin-bottom: 10px; color: #0066cc;">কোম্পানি ও দাম (সার্ভিস চার্জ সহ)</p>
         
         <div id="brandContainer"></div>
         <button type="button" class="btn-add" onclick="addBrandRow()"><i class="fa-solid fa-plus"></i> নতুন কোম্পানি যোগ করুন</button>
@@ -95,10 +99,9 @@
       </div>
     </div>
 
-    <!-- Customers Tab -->
     <div id="tab-customers" style="display: none;">
-      <div class="form-group" style="background: white; padding: 15px; border-radius: 8px; border: 1px solid #eee; margin-bottom: 20px;">
-        <label>কাস্টমার খুঁজুন (নাম বা ফোন নাম্বার)</label>
+      <div class="form-group" style="background: white; padding: 12px; border-radius: 8px; border: 1px solid #eee; margin-bottom: 15px;">
+        <label>কাস্টমার খুঁজুন (নাম বা ফোন)</label>
         <input type="text" id="customerSearch" placeholder="🔍 সার্চ করুন..." oninput="filterCustomers()" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px;">
       </div>
       <div id="customersList"><p style="text-align:center; color:#888;">লোড হচ্ছে...</p></div>
@@ -115,8 +118,8 @@
     let currentBrands = []; 
     let locationData = {};
     let allDistricts = [];
-    let myOrders = []; // অর্ডার জমা রাখার জন্য
-    let myCustomers = []; // কাস্টমার জমা রাখার জন্য
+    let myOrders = []; 
+    let myCustomers = []; 
 
     fetch('./assets/js/bd-locations.json')
       .then(res => res.json())
@@ -136,8 +139,7 @@
 
     document.getElementById('pDistrictSearch').addEventListener('input', (e) => {
       const val = e.target.value.toLowerCase();
-      const filtered = allDistricts.filter(d => d.toLowerCase().includes(val));
-      renderDistricts(filtered);
+      renderDistricts(allDistricts.filter(d => d.toLowerCase().includes(val)));
     });
 
     document.getElementById('pThanaSearch').addEventListener('input', (e) => {
@@ -207,17 +209,17 @@
     function renderBrandRows() {
       const container = document.getElementById('brandContainer');
       if(currentBrands.length === 0) {
-        container.innerHTML = '<p style="font-size:12px; color:#888; text-align:center; margin-bottom:10px;">কোনো কোম্পানি যোগ করা হয়নি। নিচের বাটনে ক্লিক করুন।</p>';
+        container.innerHTML = '<p style="font-size:12px; color:#888; text-align:center; margin-bottom:10px;">কোনো কোম্পানি নেই।</p>';
         return;
       }
       container.innerHTML = currentBrands.map((b, index) => `
         <div class="brand-card-ui">
           <button type="button" class="delete-btn" onclick="removeBrand(${index})"><i class="fa-solid fa-trash"></i></button>
-          <div class="form-group" style="margin-bottom: 10px; padding-right: 40px;">
+          <div class="form-group" style="margin-bottom: 8px; padding-right: 35px;">
             <label>কোম্পানির নাম</label>
             <input type="text" placeholder="যেমন: Omera" value="${b.name || ''}" oninput="updateBrand(${index}, 'name', this.value)">
           </div>
-          <label style="font-size:12px; font-weight:700; color:#333;">দাম সেট করুন (সার্ভিস চার্জ সহ)</label>
+          <label style="font-size:11px; font-weight:700; color:#333;">দাম (সার্ভিস চার্জ সহ)</label>
           <div class="price-grid">
             <div><label>৫.৫ কেজি</label><input type="number" placeholder="৳" value="${b.price5 || ''}" oninput="updateBrand(${index}, 'price5', this.value)"></div>
             <div><label>১২ কেজি</label><input type="number" placeholder="৳" value="${b.price12 || ''}" oninput="updateBrand(${index}, 'price12', this.value)"></div>
@@ -274,26 +276,31 @@
       }
     };
 
-    // অর্ডার লোড ও রেন্ডার
     async function loadOrders() {
       const listEl = document.getElementById('ordersList');
       try {
         const q = query(collection(db, "orders"), where("partnerId", "==", myPartnerId), orderBy("createdAt", "desc"));
         const snapshot = await getDocs(q);
-        myOrders = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })); // অ্যারে সেভ
+        myOrders = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         
         if (snapshot.empty) { listEl.innerHTML = '<p style="text-align:center; color:#888;">কোনো নতুন অর্ডার নেই।</p>'; return; }
         
         listEl.innerHTML = myOrders.map(order => `
             <div class="order-card">
-              <div class="order-top-actions">
-                <button class="btn-pdf" onclick="downloadPDF('${order.id}')"><i class="fa-solid fa-file-pdf"></i></button>
-                <button class="btn-del-order" onclick="deleteOrder('${order.id}')"><i class="fa-solid fa-trash"></i></button>
+              <div class="order-header">
+                <div class="customer-info">
+                  <p><strong>কাস্টমার:</strong> ${order.customerName}</p>
+                  <p><strong>ফোন:</strong> ${order.customerPhone}</p>
+                  <p><strong>ঠিকানা:</strong> ${order.customerAddress}</p>
+                </div>
+                <div class="top-actions">
+                  <button class="btn-icon btn-pdf" onclick="sharePDF('${order.id}')"><i class="fa-solid fa-share-nodes"></i></button>
+                  <button class="btn-icon btn-del" onclick="deleteOrder('${order.id}')"><i class="fa-solid fa-trash"></i></button>
+                </div>
               </div>
-              <p><strong>কাস্টমার:</strong> ${order.customerName} (${order.customerPhone})</p>
-              <p><strong>ঠিকানা:</strong> ${order.customerAddress}</p>
-              <div style="background:#f8f9fa; padding:8px; border-radius:6px; margin: 10px 0;">
-                <strong>অর্ডার:</strong> ${order.brand} - ${order.cylinderSize} | <strong>দাম:</strong> ৳ ${order.price} (সার্ভিস চার্জ সহ)
+              <div class="order-details-box">
+                <strong>অর্ডার:</strong> ${order.brand} - ${order.cylinderSize} <br>
+                <strong>দাম:</strong> ৳ ${order.price} (সার্ভিস চার্জ সহ)
               </div>
               <div class="action-btns">
                 <a href="tel:${order.customerPhone}" class="btn-call"><i class="fa-solid fa-phone"></i> Call</a>
@@ -304,7 +311,6 @@
       } catch (error) { listEl.innerHTML = `<p style="color:red;">Error: ${error.message}</p>`; }
     }
 
-    // ডেলিভারি স্ট্যাটাস
     window.markDelivered = async function(orderId) {
       if(!confirm("ডেলিভারি সম্পন্ন হয়েছে?")) return;
       try {
@@ -313,7 +319,6 @@
       } catch (error) { alert("সমস্যা: " + error.message); }
     };
 
-    // অর্ডার ডিলিট
     window.deleteOrder = async function(orderId) {
       if(!confirm("আপনি কি নিশ্চিত এই অর্ডারটি ডিলিট করতে চান?")) return;
       try {
@@ -322,40 +327,68 @@
       } catch (error) { alert("সমস্যা: " + error.message); }
     };
 
-    // PDF ডাউনলোড
-    window.downloadPDF = function(orderId) {
+    // সুন্দর পিডিএফ শেয়ার অপশন
+    window.sharePDF = function(orderId) {
       const order = myOrders.find(o => o.id === orderId);
       if(!order) return;
 
       const htmlContent = `
-        <div style="font-family: Arial; padding: 20px;">
-          <h2 style="text-align:center; color:#cc0000;">LPGas.bd - Order Invoice</h2>
-          <hr>
+        <div style="font-family: Arial; padding: 20px; color: #333;">
+          <div style="text-align: center; margin-bottom: 20px;">
+            <h1 style="color: #cc0000; margin: 0;"><i class="fa-solid fa-fire"></i> LPGas.bd</h1>
+            <p style="font-size: 12px; color: #666; margin-top: 5px;">Bangladesh's Trusted LPG Delivery Platform</p>
+          </div>
+          <hr style="border: 1px solid #eee;">
+          
+          <h3 style="color: #0066cc;">অর্ডার ইনভয়েস (Order Invoice)</h3>
+          <p><strong>Order ID:</strong> ${order.id.slice(0,8)}</p>
           <p><strong>Customer Name:</strong> ${order.customerName}</p>
           <p><strong>Phone:</strong> ${order.customerPhone}</p>
           <p><strong>Address:</strong> ${order.customerAddress}</p>
+          
+          <hr style="border: 1px dashed #eee; margin: 15px 0;">
           <p><strong>Brand:</strong> ${order.brand}</p>
           <p><strong>Cylinder Size:</strong> ${order.cylinderSize}</p>
-          <p><strong>Total Price (Service Charge Included):</strong> ৳ ${order.price}</p>
-          <p><strong>Status:</strong> ${order.status.toUpperCase()}</p>
-          <hr>
-          <p style="text-align:center; font-size:12px; color:#888;">Generated from LPGas.bd Partner Dashboard</p>
+          <h3 style="color: #cc0000;">Total: ৳ ${order.price} (Including Service Charge)</h3>
+          
+          <hr style="border: 1px solid #eee; margin-top: 30px;">
+          <div style="text-align: center; font-size: 11px; color: #888;">
+            <p><strong>Office Address:</strong></p>
+            <p>Astern Kamlapur Commercial Complex, Room No-122, 1st floor, 64/68 North Kamlapur, Dhaka, BD</p>
+            <p>Contact: 01917080000</p>
+          </div>
         </div>
       `;
 
       const opt = {
-        margin: 1, filename: `Order_${orderId.slice(0,6)}.pdf`, image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2 }, jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+        margin: 1, 
+        filename: `Invoice_${order.id.slice(0,6)}.pdf`, 
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2 }, 
+        jsPDF: { unit: 'in', format: 'a5', orientation: 'portrait' }
       };
 
-      html2pdf().set(opt).from(htmlContent).save();
+      // পিডিএফ তৈরি করে শেয়ার করা (মোবাইলে)
+      html2pdf().set(opt).from(htmlContent).toPdf().get('pdf').then(function (pdf) {
+        const blob = pdf.output('blob');
+        const file = new File([blob], `Invoice_${order.id.slice(0,6)}.pdf`, { type: 'application/pdf' });
+        
+        if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+          navigator.share({
+            files: [file],
+            title: 'LPGas.bd Invoice',
+            text: 'Here is your order invoice.'
+          }).catch(console.error);
+        } else {
+          // যদি শেয়ার সাপোর্ট না করে, তবে ডাউনলোড হবে
+          pdf.save(`Invoice_${order.id.slice(0,6)}.pdf`);
+        }
+      });
     };
 
-    // কাস্টমার লিস্ট তৈরি করা (অর্ডার থেকে ডেটা নিয়ে)
     function processCustomers() {
       const uniqueCustomers = {};
       myOrders.forEach(order => {
-        // ফোন নাম্বারকে ইউনিক আইডি হিসেবে ধরছি
         if (!uniqueCustomers[order.customerPhone]) {
           uniqueCustomers[order.customerPhone] = {
             name: order.customerName,
@@ -377,12 +410,12 @@
       }
       listEl.innerHTML = customers.map(c => `
         <div class="customer-row">
-          <div class="customer-info">
+          <div>
             <p><strong>নাম:</strong> ${c.name}</p>
             <p><strong>ফোন:</strong> ${c.phone}</p>
-            <p style="font-size:12px; color:#666;">মোট অর্ডার: ${c.count} বার</p>
+            <p style="font-size:11px; color:#666;">মোট অর্ডার: ${c.count} বার</p>
           </div>
-          <a href="tel:${c.phone}" style="background:#25D366; color:white; padding:8px 12px; border-radius:6px; text-decoration:none; font-size:12px; font-weight:700;"><i class="fa-solid fa-phone"></i></a>
+          <a href="tel:${c.phone}" style="background:#25D366; color:white; padding:8px; border-radius:6px; text-decoration:none; font-size:12px;"><i class="fa-solid fa-phone"></i></a>
         </div>
       `).join('');
     }
