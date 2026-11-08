@@ -7,7 +7,6 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="assets/css/style.css">
   <style>
-    /* মোবাইলে হেডার ছোট করার জন্য কিছু এক্সট্রা সিএসএস */
     @media (max-width: 600px) {
       .header { padding: 12px 15px; }
       .logo { font-size: 18px; }
@@ -17,9 +16,8 @@
 </head>
 <body>
 
-  <!-- Header -->
   <header class="header">
-    <!-- এখানে ৫ বার ক্লিক করলে অ্যাডমিন প্যানেলে যাবে -->
+    <!-- ৫ বার ক্লিক করলে অ্যাডমিন প্যানেলে যাবে -->
     <a href="#" onclick="return false;" class="logo" id="mainLogo" style="text-decoration: none; color: white; cursor: pointer;">
       <i class="fa-solid fa-fire"></i> LPGas<span>.bd</span>
     </a>
@@ -28,7 +26,6 @@
     </div>
   </header>
 
-  <!-- Hero Section -->
   <section class="hero">
     <h1>Find LPG Gas Near You</h1>
     <p>Book your cylinder from trusted partners in your area</p>
@@ -39,21 +36,16 @@
     </div>
   </section>
 
-  <!-- Dealer List -->
   <div class="container">
     <h2 class="section-title"><i class="fa-solid fa-store" style="color:#cc0000"></i> Available Partners Nearby</h2>
-    <div id="dealerList">
-      <!-- ডিলার কার্ড এখানে লোড হবে -->
-    </div>
+    <div id="dealerList"></div>
   </div>
 
-  <!-- Main Script -->
   <script>
-    // ডেমো ডেটা (পরে আমরা ফায়ারবেস থেকে আসল ডেটা আনব)
     const demoDealers = [
-      { id: '1', name: "Omera LPG Gas (Gulshan)", address: "Gulshan 1, Dhaka", phone: "8801715331303", price12: 2200, price24: 4200, wa: "8801715331303" },
-      { id: '2', name: "LPG Shop BD (Mirpur)", address: "Modina Tower, Mirpur", phone: "8801711385722", price12: 2150, price24: 4100, wa: "8801715331303" },
-      { id: '3', name: "Shatota LPG", address: "Banashree, Rampura", phone: "8801324956290", price12: 2250, price24: 4300, wa: "8801715331303" }
+      { id: '1', name: "Omera LPG Gas (Gulshan)", address: "Gulshan 1, Dhaka", phone: "8801715331303", wa: "8801715331303" },
+      { id: '2', name: "LPG Shop BD (Mirpur)", address: "Modina Tower, Mirpur", phone: "8801711385722", wa: "8801715331303" },
+      { id: '3', name: "Shatota LPG", address: "Banashree, Rampura", phone: "8801324956290", wa: "8801715331303" }
     ];
 
     const dealerListEl = document.getElementById('dealerList');
@@ -74,8 +66,8 @@
             <span><i class="fa-solid fa-map-pin"></i> ${dealer.address}</span>
             <span><i class="fa-solid fa-truck"></i> Home Delivery Available</span>
           </div>
-          <div class="dealer-price">
-            12 KG: <span>৳ ${dealer.price12}</span> &nbsp;|&nbsp; 24 KG: <span>৳ ${dealer.price24}</span>
+          <div class="dealer-price" style="font-size: 13px; color: #666; margin-bottom: 15px;">
+            <i class="fa-solid fa-circle-info"></i> সার্ভিস চার্জ সহ দাম দেখতে অর্ডার করুন
           </div>
           <div class="btn-group">
             <button class="btn-order" onclick="goToOrder('${dealer.id}')"><i class="fa-solid fa-bag-shopping"></i> Order Now</button>
@@ -85,64 +77,47 @@
       `).join('');
     }
 
-    // সার্চ বা Near Me এর লজিক
     window.searchDealers = function() {
       const area = document.getElementById('searchArea').value.toLowerCase();
-      
-      // যদি ইনপুট খালি থাকে, তবে লোকেশন চাওয়ার সিমুলেশন করি (পরবর্তীতে ম্যাপে যুক্ত হবে)
       if(!area) {
         if (navigator.geolocation) {
           document.getElementById('nearMeBtn').innerText = "Locating...";
           navigator.geolocation.getCurrentPosition(
             (position) => {
-              // লোকেশন পাওয়া গেলে (আপাতত আমরা সব ডিলার দেখাবো)
-              alert("লোকেশন পাওয়া গেছে! আপনার আশেপাশের পার্টনারদের দেখানো হচ্ছে।");
+              alert("লোকেশন পাওয়া গেছে!");
               document.getElementById('nearMeBtn').innerText = "Near Me";
               renderDealers(demoDealers); 
             },
             (error) => {
-              alert("লোকেশন পাওয়া যায়নি। দয়া করে ম্যানুয়ালি এলাকার নাম লিখুন।");
+              alert("লোকেশন পাওয়া যায়নি। ম্যানুয়ালি এলাকা লিখুন।");
               document.getElementById('nearMeBtn').innerText = "Near Me";
             }
           );
-        } else {
-          renderDealers(demoDealers);
-        }
+        } else { renderDealers(demoDealers); }
         return;
       }
-
-      // যদি ম্যানুয়ালি এলাকা লেখা হয়
       const filtered = demoDealers.filter(d => d.address.toLowerCase().includes(area));
       renderDealers(filtered);
     };
 
-    window.goToOrder = function(id) {
-      window.location.href = `order.html?partnerId=${id}`;
-    };
-
+    window.goToOrder = function(id) { window.location.href = `order.html?partnerId=${id}`; };
     window.contactWhatsApp = function(partnerName, waNumber) {
-      const msg = encodeURIComponent(`Hi, I found you on LPGas.bd. I want to order a 12kg cylinder from ${partnerName}. Please confirm the price and delivery.`);
+      const msg = encodeURIComponent(`Hi, I found you on LPGas.bd. I want to order from ${partnerName}. Please confirm.`);
       window.open(`https://wa.me/${waNumber}?text=${msg}`, '_blank');
     };
 
-    // প্রথমবার লোড হওয়ার সময় ডিলার দেখানো
     renderDealers(demoDealers);
 
-    // লোগোতে ৫ বার ক্লিক করলে অ্যাডমিন প্যানেলে যাবে
+    // ৫ বার ক্লিকে অ্যাডমিন প্যানেল
     let clickCount = 0;
     let clickTimer;
     document.getElementById('mainLogo').addEventListener('click', function(e) {
       e.preventDefault();
       clickCount++;
       clearTimeout(clickTimer);
-      clickTimer = setTimeout(() => { clickCount = 0; }, 1000); // ১ সেকেন্ড পর রিসেট
-      
-      if (clickCount === 5) {
-        window.location.href = "admin.html";
-        clickCount = 0;
-      }
+      clickTimer = setTimeout(() => { clickCount = 0; }, 1000); 
+      if (clickCount === 5) { window.location.href = "admin.html"; clickCount = 0; }
     });
   </script>
-
 </body>
 </html>
