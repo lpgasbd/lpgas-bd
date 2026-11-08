@@ -12,11 +12,9 @@
     .form-group label { display: block; font-weight: 700; font-size: 14px; margin-bottom: 6px; color: #333; }
     .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 12px; border: 1.5px solid #ccc; border-radius: 8px; font-size: 15px; outline: none; }
     .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: #cc0000; }
-    
     .location-btn { width: 100%; background: #e6f0fa; color: #0066cc; border: 1px solid #b3d4fc; padding: 12px; border-radius: 8px; font-weight: 700; font-size: 14px; cursor: pointer; margin-bottom: 10px; display: flex; justify-content: center; align-items: center; gap: 8px; }
     .location-btn.success { background: #d4edda; color: #155724; border-color: #c3e6cb; }
     .location-status { font-size: 12px; color: #666; text-align: center; margin-bottom: 15px; display: none; }
-
     .submit-btn { width: 100%; background: #25D366; color: white; border: none; padding: 14px; border-radius: 8px; font-weight: 800; font-size: 16px; cursor: pointer; margin-top: 10px; }
     .back-link { display: inline-block; margin-bottom: 15px; color: #cc0000; text-decoration: none; font-weight: 700; }
   </style>
@@ -38,22 +36,24 @@
         <input type="hidden" id="partnerId" value="">
         <input type="hidden" id="cLat" value="">
         <input type="hidden" id="cLng" value="">
+        <input type="hidden" id="cPrice" value="">
         
         <div class="form-group">
           <label>কোম্পানির নাম (ব্র্যান্ড) *</label>
-          <input type="text" id="cBrand" placeholder="যেমন: Omera / Bashundhara" required>
+          <select id="cBrand" required onchange="updateSizes()">
+            <option value="">সিলেক্ট করুন</option>
+          </select>
         </div>
 
         <div class="form-group">
           <label>সিলিন্ডারের সাইজ *</label>
-          <select id="cSize" required>
-            <option value="5.5kg">৫.৫ কেজি</option>
-            <option value="12kg">১২ কেজি</option>
-            <option value="15kg">১৫ কেজি</option>
-            <option value="25kg">২৫ কেজি</option>
-            <option value="35kg">৩৫ কেজি</option>
-            <option value="45kg">৪৫ কেজি</option>
+          <select id="cSize" required onchange="updatePrice()">
+            <option value="">আগে কোম্পানি সিলেক্ট করুন</option>
           </select>
+        </div>
+
+        <div class="form-group" style="background: #fff3cd; padding: 12px; border-radius: 8px; border: 1px solid #ffeeba;">
+          <p style="font-size: 14px; font-weight: 800; color: #856404; margin: 0;">মূল্য: ৳ <span id="priceDisplay">0</span> (সার্ভিস চার্জ সহ)</p>
         </div>
 
         <div class="form-group">
@@ -88,7 +88,7 @@
 
   <script type="module">
     import { db } from './assets/js/firebase-config.js';
-    import { collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { collection, addDoc, serverTimestamp, doc, getDoc, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
     const urlParams = new URLSearchParams(window.location.search);
     const partnerId = urlParams.get('partnerId');
@@ -96,7 +96,73 @@
     if (!partnerId) { alert("ভুল লিংক!"); window.location.href = "index.html"; }
     document.getElementById('partnerId').value = partnerId;
     
-    document.getElementById('partnerNameDisplay').innerText = `পার্টনার আইডি: ${partnerId}`;
+    let partnerData = null;
+
+    // পার্টনারের ডেটা লোড করা
+    async function loadPartner() {
+      try {
+        const q = query(collection(db, "users"), where("partnerId", "==", partnerId));
+        const querySnapshot = await getDocs(q);
+        
+        if (!querySnapshot.empty) {
+          partnerData = querySnapshot.docs[0].data();
+          document.getElementById('partnerNameDisplay').innerText = `অর্ডার করছেন: ${partnerData.shopName}`;
+          
+          // ব্র্যান্ড ড্রপডাউন তৈরি
+          const brandSelect = document.getElementById('cBrand');
+          if(partnerData.brands && partnerData.brands.length > 0) {
+            partnerData.brands.forEach((b, index) => {
+              brandSelect.innerHTML += `<option value="${index}">${b.name}</option>`;
+            });
+          } else {
+            brandSelect.innerHTML = `<option value="">কোনো ব্র্যান্ড নেই</option>`;
+          }
+        } else {
+          alert("পার্টনার খুঁজে পাওয়া যায়নি!");
+        }
+      } catch (error) { console.error(error); }
+    }
+
+    // ব্র্যান্ড সিলেক্ট করলে সাইজ আপডেট হবে
+    window.updateSizes = function() {
+      const brandIndex = document.getElementById('cBrand').value;
+      const sizeSelect = document.getElementById('cSize');
+      sizeSelect.innerHTML = '<option value="">সাইজ সিলেক্ট করুন</option>';
+      document.getElementById('priceDisplay').innerText = '0';
+
+      if(brandIndex === "" || !partnerData) return;
+
+      const brand = partnerData.brands[brandIndex];
+      const sizes = [
+        { key: 'price5', label: '৫.৫ কেজি' },
+        { key: 'price12', label: '১২ কেজি' },
+        { key: 'price15', label: '১৫ কেজি' },
+        { key: 'price25', label: '২৫ কেজি' },
+        { key: 'price35', label: '৩৫ কেজি' },
+        { key: 'price45', label: '৪৫ কেজি' }
+      ];
+
+      sizes.forEach(s => {
+        if (brand[s.key] && brand[s.key] > 0) {
+          sizeSelect.innerHTML += `<option value="${s.key}">${s.label} - ৳${brand[s.key]}</option>`;
+        }
+      });
+    };
+
+    // সাইজ সিলেক্ট করলে দাম আপডেট হবে
+    window.updatePrice = function() {
+      const brandIndex = document.getElementById('cBrand').value;
+      const sizeKey = document.getElementById('cSize').value;
+      
+      if(brandIndex !== "" && sizeKey !== "" && partnerData) {
+        const price = partnerData.brands[brandIndex][sizeKey];
+        document.getElementById('priceDisplay').innerText = price;
+        document.getElementById('cPrice').value = price;
+      } else {
+        document.getElementById('priceDisplay').innerText = '0';
+        document.getElementById('cPrice').value = '';
+      }
+    };
 
     let locationCaptured = false;
     window.getLocation = function() {
@@ -129,14 +195,20 @@
         return;
       }
 
+      const brandIndex = document.getElementById('cBrand').value;
+      const sizeKey = document.getElementById('cSize').value;
+      const brandName = partnerData.brands[brandIndex].name;
+      const sizeLabel = document.getElementById('cSize').options[document.getElementById('cSize').selectedIndex].text.split(' - ')[0];
+
       const btn = document.getElementById('submitBtn');
       btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> প্রসেস হচ্ছে...';
       btn.disabled = true;
 
       const orderData = {
         partnerId: partnerId,
-        brand: document.getElementById('cBrand').value,
-        cylinderSize: document.getElementById('cSize').value,
+        brand: brandName,
+        cylinderSize: sizeLabel,
+        price: Number(document.getElementById('cPrice').value),
         customerName: document.getElementById('cName').value,
         customerPhone: document.getElementById('cPhone').value,
         customerAddress: document.getElementById('cAddress').value,
@@ -156,6 +228,8 @@
         btn.disabled = false;
       }
     });
+
+    loadPartner();
   </script>
 </body>
 </html>
