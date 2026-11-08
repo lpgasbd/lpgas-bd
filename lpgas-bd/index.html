@@ -37,41 +37,47 @@
 
   <div class="container">
     <h2 class="section-title"><i class="fa-solid fa-store" style="color:#cc0000"></i> Available Partners Nearby</h2>
-    <div id="dealerList"></div>
+    <div id="dealerList"><p style="text-align:center; color:#888;">লোড হচ্ছে...</p></div>
   </div>
 
-  <script>
-    // ডেমো ডেটা
-    const demoDealers = [
-      { id: '1', name: "Omera LPG (Gulshan)", address: "Gulshan 1, Dhaka", phone: "8801715331303", wa: "8801715331303" },
-      { id: '2', name: "LPG Shop BD (Mirpur)", address: "Modina Tower, Mirpur", phone: "8801711385722", wa: "8801715331303" },
-      { id: '3', name: "Shatota LPG", address: "Banashree, Rampura", phone: "8801324956290", wa: "8801715331303" }
-    ];
+  <script type="module">
+    import { db } from './assets/js/firebase-config.js';
+    import { collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
+    let allPartners = [];
     const dealerListEl = document.getElementById('dealerList');
+
+    // ফায়ারবেস থেকে পার্টনার লোড করা
+    async function loadRealPartners() {
+      try {
+        const snapshot = await getDocs(collection(db, "users"));
+        allPartners = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        renderDealers(allPartners);
+      } catch (error) {
+        dealerListEl.innerHTML = `<p style="text-align:center; color:red;">ডেটা লোড করতে সমস্যা হয়েছে।</p>`;
+      }
+    }
 
     function renderDealers(dealers) {
       if (dealers.length === 0) {
-        dealerListEl.innerHTML = `<p style="text-align:center; color:#888; margin-top:20px;">No partners found in this area.</p>`;
+        dealerListEl.innerHTML = `<p style="text-align:center; color:#888; margin-top:20px;">কোনো পার্টনার পাওয়া যায়নি।</p>`;
         return;
       }
       
       dealerListEl.innerHTML = dealers.map(dealer => `
         <div class="dealer-card">
           <div class="dealer-header">
-            <div class="dealer-name">${dealer.name}</div>
-            <div class="dealer-dist"><i class="fa-solid fa-location-dot"></i> 2 km</div>
+            <div class="dealer-name">${dealer.shopName || 'New Partner'}</div>
           </div>
           <div class="dealer-info">
-            <span><i class="fa-solid fa-map-pin"></i> ${dealer.address}</span>
-            <span><i class="fa-solid fa-truck"></i> Home Delivery Available</span>
+            <span><i class="fa-solid fa-map-pin"></i> ${dealer.address || 'Location not set'}</span>
+            <span><i class="fa-solid fa-phone"></i> ${dealer.phone || 'Phone not set'}</span>
           </div>
-          <div class="dealer-price" style="font-size: 13px; color: #666; margin-bottom: 15px;">
-            <i class="fa-solid fa-circle-info"></i> সার্ভিস চার্জ সহ দাম দেখতে অর্ডার করুন
+          <div class="dealer-price">
+            12 KG: <span>৳ ${dealer.price12 || 'N/A'}</span> &nbsp;|&nbsp; 24 KG: <span>৳ ${dealer.price24 || 'N/A'}</span>
           </div>
           <div class="btn-group">
-            <button class="btn-order" onclick="goToOrder('${dealer.id}')"><i class="fa-solid fa-bag-shopping"></i> Order Now</button>
-            <button class="btn-wa" onclick="contactWhatsApp('${dealer.name}', '${dealer.wa}')"><i class="fa-brands fa-whatsapp"></i> WhatsApp</button>
+            <button class="btn-order" onclick="goToOrder('${dealer.partnerId}')"><i class="fa-solid fa-bag-shopping"></i> Order Now</button>
           </div>
         </div>
       `).join('');
@@ -79,39 +85,17 @@
 
     window.searchDealers = function() {
       const area = document.getElementById('searchArea').value.toLowerCase();
-      
-      // লোকেশন বাটনে ক্লিক করলে শুধু মেসেজ দেখাবে এবং সব ডিলার লোড করবে
-      if(!area) {
-        document.getElementById('nearMeBtn').innerText = "Locating...";
-        if (navigator.geolocation) {
-          navigator.geolocation.getCurrentPosition(
-            (position) => {
-              document.getElementById('nearMeBtn').innerText = "Near Me";
-              alert("আপনার আশেপাশের পার্টনারদের দেখানো হচ্ছে।");
-              renderDealers(demoDealers); 
-            },
-            (error) => {
-              document.getElementById('nearMeBtn').innerText = "Near Me";
-              alert("লোকেশন পাওয়া যায়নি। ম্যানুয়ালি এলাকা লিখুন।");
-            }
-          );
-        } else { renderDealers(demoDealers); }
-        return;
-      }
-
-      // যদি ম্যানুয়ালি এলাকা লেখা হয়
-      const filtered = demoDealers.filter(d => d.address.toLowerCase().includes(area));
+      if(!area) { renderDealers(allPartners); return; }
+      const filtered = allPartners.filter(d => (d.address || '').toLowerCase().includes(area));
       renderDealers(filtered);
     };
 
-    window.goToOrder = function(id) { window.location.href = `order.html?partnerId=${id}`; };
-    
-    window.contactWhatsApp = function(partnerName, waNumber) {
-      const msg = encodeURIComponent(`Hi, I found you on LPGas.bd. I want to order from ${partnerName}. Please confirm.`);
-      window.open(`https://wa.me/${waNumber}?text=${msg}`, '_blank');
+    window.goToOrder = function(id) { 
+      if(!id || id === 'undefined') { alert("এই পার্টনারের আইডি সেট করা নেই।"); return; }
+      window.location.href = `order.html?partnerId=${id}`; 
     };
 
-    renderDealers(demoDealers);
+    loadRealPartners();
 
     // ৫ বার ক্লিকে অ্যাডমিন প্যানেল
     let clickCount = 0;
