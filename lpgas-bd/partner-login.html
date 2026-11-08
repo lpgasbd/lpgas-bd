@@ -3,19 +3,17 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Partner Login — LPGas.bd</title>
+  <title>Partner Access — LPGas.bd</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="assets/css/style.css">
   <style>
     .login-container { background: white; max-width: 400px; margin: 40px auto; padding: 30px; border-radius: 14px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid #eee; text-align: center; }
-    .login-container h2 { color: #cc0000; margin-bottom: 10px; font-size: 24px; }
-    .login-container p { color: #666; font-size: 14px; margin-bottom: 20px; }
     .form-group { margin-bottom: 15px; text-align: left; }
     .form-group label { display: block; font-weight: 700; font-size: 14px; margin-bottom: 6px; color: #333; }
-    .form-group input { width: 100%; padding: 12px; border: 1.5px solid #ccc; border-radius: 8px; font-size: 15px; outline: none; font-family: 'Inter', sans-serif; }
-    .form-group input:focus { border-color: #cc0000; }
+    .form-group input { width: 100%; padding: 12px; border: 1.5px solid #ccc; border-radius: 8px; font-size: 15px; outline: none; }
     .btn-submit { width: 100%; background: #cc0000; color: white; border: none; padding: 14px; border-radius: 8px; font-weight: 800; font-size: 16px; cursor: pointer; margin-top: 10px; }
-    .error-msg { color: #d9534f; font-size: 13px; margin-bottom: 10px; display: none; }
+    .toggle-link { color: #0066cc; cursor: pointer; font-weight: 700; font-size: 14px; margin-top: 15px; display: block; }
+    .signup-fields { display: none; }
   </style>
 </head>
 <body>
@@ -25,50 +23,97 @@
   </header>
 
   <div class="login-container">
-    <h2><i class="fa-solid fa-store"></i> Partner Login</h2>
-    <p>লগইন করে আপনার অর্ডারগুলো দেখুন</p>
-    
-    <div id="errorMsg" class="error-msg"></div>
+    <h2 id="formTitle" style="color: #cc0000; margin-bottom: 15px;"><i class="fa-solid fa-store"></i> Partner Login</h2>
+    <div id="errorMsg" style="color: red; font-size: 13px; margin-bottom: 10px; display: none;"></div>
 
-    <form id="loginForm">
+    <form id="authForm">
       <div class="form-group">
         <label>ইমেইল (Email)</label>
-        <input type="email" id="email" placeholder="partner@lpgas.com" required>
+        <input type="email" id="email" required>
       </div>
       <div class="form-group">
         <label>পাসওয়ার্ড (Password)</label>
-        <input type="password" id="password" placeholder="••••••••" required>
+        <input type="password" id="password" required minlength="6">
       </div>
+      
+      <!-- সাইন আপের সময় এই ফিল্ডগুলো দেখাবে -->
+      <div class="signup-fields" id="signupFields">
+        <div class="form-group">
+          <label>ফোন নাম্বার (Phone)</label>
+          <input type="tel" id="regPhone" placeholder="017XXXXXXXX">
+        </div>
+        <div class="form-group">
+          <label>আপনার এলাকা (Area)</label>
+          <input type="text" id="regArea" placeholder="যেমন: ধানমন্ডি, ঢাকা">
+        </div>
+        <div class="form-group">
+          <label>পার্টনার আইডি (Admin দিবে)</label>
+          <input type="text" id="regPartnerId" placeholder="যেমন: 1">
+        </div>
+      </div>
+
       <button type="submit" class="btn-submit" id="submitBtn">লগইন করুন</button>
     </form>
+
+    <span class="toggle-link" id="toggleAuth">নতুন পার্টনার? এখানে রেজিস্ট্রেশন করুন</span>
   </div>
 
   <script type="module">
-    import { auth } from './assets/js/firebase-config.js';
-    import { signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import { auth, db } from './assets/js/firebase-config.js';
+    import { signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import { doc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    let isSignup = false;
 
     onAuthStateChanged(auth, (user) => {
-      if (user) { window.location.href = "partner-dashboard.html"; }
+      if (user && !isSignup) { window.location.href = "partner-dashboard.html"; }
     });
 
-    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+    document.getElementById('toggleAuth').addEventListener('click', () => {
+      isSignup = !isSignup;
+      document.getElementById('formTitle').innerHTML = isSignup ? '<i class="fa-solid fa-user-plus"></i> Partner Sign Up' : '<i class="fa-solid fa-store"></i> Partner Login';
+      document.getElementById('submitBtn').innerText = isSignup ? 'রেজিস্ট্রেশন করুন' : 'লগইন করুন';
+      document.getElementById('signupFields').style.display = isSignup ? 'block' : 'none';
+      document.getElementById('toggleAuth').innerText = isSignup ? 'আগে থেকেই অ্যাকাউন্ট আছে? লগইন করুন' : 'নতুন পার্টনার? এখানে রেজিস্ট্রেশন করুন';
+      document.getElementById('errorMsg').style.display = 'none';
+    });
+
+    document.getElementById('authForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       const email = document.getElementById('email').value;
       const password = document.getElementById('password').value;
       const btn = document.getElementById('submitBtn');
       const errDiv = document.getElementById('errorMsg');
 
-      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> লগইন হচ্ছে...';
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> প্রসেস হচ্ছে...';
       btn.disabled = true;
-      errDiv.style.display = 'none';
 
       try {
-        await signInWithEmailAndPassword(auth, email, password);
-        window.location.href = "partner-dashboard.html";
+        if (isSignup) {
+          // নতুন রেজিস্ট্রেশন
+          const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+          const user = userCredential.user;
+          
+          // Firestore-এ ডেটা সেভ
+          await setDoc(doc(db, 'users', user.uid), {
+            email: email,
+            phone: document.getElementById('regPhone').value,
+            address: document.getElementById('regArea').value,
+            partnerId: document.getElementById('regPartnerId').value,
+            role: 'partner',
+            createdAt: serverTimestamp()
+          });
+          alert("সফলভাবে রেজিস্ট্রেশন হয়েছে!");
+          window.location.href = "partner-dashboard.html";
+        } else {
+          // লগইন
+          await signInWithEmailAndPassword(auth, email, password);
+          window.location.href = "partner-dashboard.html";
+        }
       } catch (error) {
-        errDiv.innerText = "লগইন ব্যর্থ হয়েছে! ইমেইল বা পাসওয়ার্ড চেক করুন।";
+        errDiv.innerText = error.message.replace("Firebase: ", "");
         errDiv.style.display = 'block';
-        btn.innerHTML = 'লগইন করুন';
+        btn.innerHTML = isSignup ? 'রেজিস্ট্রেশন করুন' : 'লগইন করুন';
         btn.disabled = false;
       }
     });
