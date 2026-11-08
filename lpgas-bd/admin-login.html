@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Login — LPGas.bd</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="assets/css/style.css">
+  <style>
+    .login-container { background: white; max-width: 400px; margin: 40px auto; padding: 30px; border-radius: 14px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid #eee; text-align: center; }
+    .form-group { margin-bottom: 15px; text-align: left; }
+    .form-group label { display: block; font-weight: 700; font-size: 14px; margin-bottom: 6px; color: #333; }
+    .form-group input { width: 100%; padding: 12px; border: 1.5px solid #ccc; border-radius: 8px; font-size: 15px; outline: none; }
+    .form-group input:focus { border-color: #cc0000; }
+    .btn-submit { width: 100%; background: #cc0000; color: white; border: none; padding: 14px; border-radius: 8px; font-weight: 800; font-size: 16px; cursor: pointer; margin-top: 10px; }
+    .error-msg { color: #d9534f; font-size: 13px; margin-bottom: 10px; display: none; }
+  </style>
+</head>
+<body>
+
+  <header class="header">
+    <a href="index.html" class="logo" style="text-decoration: none; color: white;"><i class="fa-solid fa-fire"></i> LPGas<span>.bd</span> Admin</a>
+  </header>
+
+  <div class="login-container">
+    <h2 style="color: #cc0000; margin-bottom: 10px; font-size: 24px;"><i class="fa-solid fa-lock"></i> Admin Login</h2>
+    <p style="color: #666; font-size: 14px; margin-bottom: 20px;">শুধুমাত্র অনুমোদিত ব্যক্তির জন্য</p>
+    
+    <div id="errorMsg" class="error-msg"></div>
+
+    <form id="adminLoginForm">
+      <div class="form-group">
+        <label>ইমেইল (Email)</label>
+        <input type="email" id="adminEmail" placeholder="admin@lpgas.bd" required>
+      </div>
+      <div class="form-group">
+        <label>পাসওয়ার্ড (Password)</label>
+        <input type="password" id="adminPassword" placeholder="••••••••" required>
+      </div>
+      <button type="submit" class="btn-submit" id="submitBtn">লগইন করুন</button>
+    </form>
+  </div>
+
+  <script type="module">
+    import { auth } from './assets/js/firebase-config.js';
+    import { signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+    // অ্যাডমিন ইমেইল
+    const ADMIN_EMAIL = "admin@lpgas.bd";
+
+    // যদি আগে থেকেই লগইন থাকে, সোজা অ্যাডমিন প্যানেলে যাবে
+    onAuthStateChanged(auth, (user) => {
+      if (user && user.email === ADMIN_EMAIL) {
+        window.location.href = "admin.html";
+      }
+    });
+
+    document.getElementById('adminLoginForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = document.getElementById('adminEmail').value;
+      const password = document.getElementById('adminPassword').value;
+      const btn = document.getElementById('submitBtn');
+      const errDiv = document.getElementById('errorMsg');
+
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> লগইন হচ্ছে...';
+      btn.disabled = true;
+      errDiv.style.display = 'none';
+
+      try {
+        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        
+        // চেক করা: এই ইউজার কি আসলেই অ্যাডমিন?
+        if (userCredential.user.email === ADMIN_EMAIL) {
+          window.location.href = "admin.html";
+        } else {
+          await signOut(auth); // ভুল ইমেইল হলে লগআউট করে দিবে
+          errDiv.innerText = "দুঃখিত, আপনি অ্যাডমিন নন!";
+          errDiv.style.display = 'block';
+          btn.innerHTML = 'লগইন করুন';
+          btn.disabled = false;
+        }
+      } catch (error) {
+        errDiv.innerText = "লগইন ব্যর্থ হয়েছে! ইমেইল বা পাসওয়ার্ড চেক করুন।";
+        errDiv.style.display = 'block';
+        btn.innerHTML = 'লগইন করুন';
+        btn.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>
