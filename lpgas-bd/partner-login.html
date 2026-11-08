@@ -21,7 +21,7 @@
 <body>
 
   <header class="header">
-    <div class="logo"><i class="fa-solid fa-fire"></i> LPGas<span>.bd</span></div>
+    <a href="index.html" class="logo" style="text-decoration: none; color: white;"><i class="fa-solid fa-fire"></i> LPGas<span>.bd</span></a>
   </header>
 
   <div class="login-container">
@@ -33,7 +33,7 @@
     <form id="loginForm">
       <div class="form-group">
         <label>ইমেইল (Email)</label>
-        <input type="email" id="email" placeholder="partner@gmail.com" required>
+        <input type="email" id="email" placeholder="partner@lpgas.com" required>
       </div>
       <div class="form-group">
         <label>পাসওয়ার্ড (Password)</label>
@@ -47,11 +47,8 @@
     import { auth } from './assets/js/firebase-config.js';
     import { signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
-    // যদি আগে থেকেই লগইন করা থাকে, তবে সরাসরি ড্যাশবোর্ডে পাঠিয়ে দিব
     onAuthStateChanged(auth, (user) => {
-      if (user) {
-        window.location.href = "partner-dashboard.html";
-      }
+      if (user) { window.location.href = "partner-dashboard.html"; }
     });
 
     document.getElementById('loginForm').addEventListener('submit', async (e) => {
@@ -76,6 +73,5 @@
       }
     });
   </script>
-
 </body>
 </html>
