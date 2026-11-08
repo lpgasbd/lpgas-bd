@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Panel — LPGas.bd</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="assets/css/style.css">
+  <style>
+    .admin-card { background: white; border-radius: 10px; padding: 15px; margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); border-left: 4px solid #cc0000; }
+    .admin-header { display: flex; justify-content: space-between; margin-bottom: 8px; border-bottom: 1px solid #eee; padding-bottom: 8px; }
+    .status-badge { padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; text-transform: uppercase; }
+    .status-pending { background: #fff3cd; color: #856404; }
+    .status-delivered { background: #d4edda; color: #155724; }
+    .admin-info p { font-size: 13px; color: #444; margin-bottom: 4px; }
+  </style>
+</head>
+<body>
+
+  <header class="header">
+    <div class="logo"><i class="fa-solid fa-fire"></i> LPGas<span>.bd</span> Admin</div>
+    <button class="logout-btn" id="logoutBtn" style="background:white; color:#cc0000; border:none; padding:8px 14px; border-radius:8px; font-weight:700; cursor:pointer;">Logout</button>
+  </header>
+
+  <div class="container" style="margin-top: 20px;">
+    <h2 class="section-title"><i class="fa-solid fa-list-check" style="color:#cc0000"></i> সব অর্ডার (All Orders)</h2>
+    <div id="allOrdersList">
+      <p style="text-align:center; color:#888;">লোড হচ্ছে...</p>
+    </div>
+  </div>
+
+  <script type="module">
+    import { auth, db } from './assets/js/firebase-config.js';
+    import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import { collection, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    let currentUser = null;
+
+    // লগইন স্টেট চেক
+    onAuthStateChanged(auth, (user) => {
+      if (!user) {
+        // অ্যাডমিন লগইন না থাকলে সাধারণ লগইন পেজে পাঠিয়ে দিবে (পরবর্তীতে অ্যাডমিন লগইন আলাদা করব)
+        window.location.href = "partner-login.html"; 
+      } else {
+        currentUser = user;
+        loadAllOrders();
+      }
+    });
+
+    // লগআউট
+    document.getElementById('logoutBtn').addEventListener('click', async () => {
+      await signOut(auth);
+      window.location.href = "partner-login.html";
+    });
+
+    // সব অর্ডার লোড করা
+    async function loadAllOrders() {
+      const listEl = document.getElementById('allOrdersList');
+      try {
+        // সব অর্ডার নতুন থেকে পুরনো ক্রমে আনব
+        const q = query(collection(db, "orders"), orderBy("createdAt", "desc"));
+        const querySnapshot = await getDocs(q);
+
+        if (querySnapshot.empty) {
+          listEl.innerHTML = '<p style="text-align:center; color:#888;">এখনো কোনো অর্ডার আসেনি।</p>';
+          return;
+        }
+
+        listEl.innerHTML = querySnapshot.docs.map(docSnap => {
+          const order = docSnap.data();
+          const date = order.createdAt ? order.createdAt.toDate().toLocaleString() : 'N/A';
+          const statusClass = order.status === 'delivered' ? 'status-delivered' : 'status-pending';
+          
+          return `
+            <div class="admin-card">
+              <div class="admin-header">
+                <span style="font-weight:700; color:#333;">অর্ডার: ${docSnap.id.slice(0, 6)}...</span>
+                <span class="status-badge ${statusClass}">${order.status}</span>
+              </div>
+              <div class="admin-info">
+                <p><strong>কাস্টমার:</strong> ${order.customerName} (${order.customerPhone})</p>
+                <p><strong>ঠিকানা:</strong> ${order.customerAddress}</p>
+                <p><strong>গ্যাস:</strong> ${order.cylinderSize} - ${order.quantity} পিস</p>
+                <p><strong>পার্টনার আইডি:</strong> ${order.partnerId}</p>
+                <p style="font-size:11px; color:#888;">সময়: ${date}</p>
+              </div>
+            </div>
+          `;
+        }).join('');
+
+      } catch (error) {
+        console.error("Error:", error);
+        listEl.innerHTML = `<p style="text-align:center; color:red;">অর্ডার লোড করতে সমস্যা হয়েছে।</p>`;
+      }
+    }
+  </script>
+
+</body>
+</html>
