@@ -39,7 +39,7 @@
     import { collection, query, orderBy, getDocs, doc, getDoc, updateDoc, where } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
     let currentUser = null;
-    let myPartnerId = null;
+    let myPartnerid = null;
 
     // লগইন স্টেট চেক
     onAuthStateChanged(auth, async (user) => {
@@ -48,12 +48,12 @@
         window.location.href = "partner-login.html"; 
       } else {
         currentUser = user;
-        await getPartnerIdAndLoadOrders();
+        await getPartneridAndLoadOrders();
       }
     });
 
     // পার্টনারের আইডি বের করা এবং অর্ডার লোড করা
-    async function getPartnerIdAndLoadOrders() {
+    async function getPartneridAndLoadOrders() {
       const listEl = document.getElementById('ordersList');
       if(!listEl) return; // DOM লোড না হলে স্কিপ করবে
       
@@ -64,8 +64,8 @@
         const userDocRef = doc(db, 'users', currentUser.uid);
         const userDocSnap = await getDoc(userDocRef);
 
-        if (userDocSnap.exists() && userDocSnap.data().partnerId) {
-          myPartnerId = userDocSnap.data().partnerId; 
+        if (userDocSnap.exists() && userDocSnap.data().partnerid) {
+          myPartnerid = userDocSnap.data().partnerid; 
         } else {
           listEl.innerHTML = '<p style="text-align:center; color:red;">আপনার অ্যাকাউন্টের সাথে কোনো পার্টনার আইডি যুক্ত নেই। অ্যাডমিনের সাথে যোগাযোগ করুন।</p>';
           return;
@@ -74,7 +74,7 @@
         // ২. শুধু এই পার্টনারের অর্ডারগুলো খোঁজা
         const q = query(
           collection(db, "orders"), 
-          where("partnerId", "==", myPartnerId), 
+          where("partnerid", "==", myPartnerid), 
           orderBy("createdAt", "desc")
         );
         
@@ -140,7 +140,7 @@
           deliveredAt: new Date()
         });
         alert("অর্ডার সফলভাবে ডেলিভারি হয়েছে!");
-        getPartnerIdAndLoadOrders();
+        getPartneridAndLoadOrders();
       } catch (error) {
         alert("আপডেট করতে সমস্যা হয়েছে: " + error.message);
       }
