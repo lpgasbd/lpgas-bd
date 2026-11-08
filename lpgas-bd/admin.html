@@ -19,11 +19,14 @@
     
     .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 999; display: none; align-items: center; justify-content: center; padding: 16px; }
     .modal-overlay.active { display: flex; }
-    .modal-box { background: white; border-radius: 12px; padding: 24px; width: 100%; max-width: 400px; }
+    .modal-box { background: white; border-radius: 12px; padding: 24px; width: 100%; max-width: 500px; max-height: 90vh; overflow-y: auto; }
     .form-group { margin-bottom: 12px; }
     .form-group label { display: block; font-weight: 700; font-size: 12px; margin-bottom: 4px; }
     .form-group input { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 6px; }
     .btn-save { background: #25D366; color: white; border: none; padding: 12px; border-radius: 6px; font-weight: 700; width: 100%; cursor: pointer; }
+    
+    .brand-item { display: flex; gap: 5px; margin-bottom: 5px; }
+    .brand-item input { flex: 1; padding: 5px; font-size: 12px; }
   </style>
 </head>
 <body>
@@ -49,11 +52,14 @@
       <h3 style="margin-bottom: 15px; color: #cc0000;">Edit Partner</h3>
       <input type="hidden" id="editDocId">
       <div class="form-group"><label>Shop Name</label><input id="editShopName" type="text"></div>
-      <div class="form-group"><label>Partner ID (e.g. 1)</label><input id="editPartnerId" type="text"></div>
+      <div class="form-group"><label>Partner ID</label><input id="editPartnerId" type="text"></div>
       <div class="form-group"><label>Phone</label><input id="editPhone" type="text"></div>
       <div class="form-group"><label>Area</label><input id="editAddress" type="text"></div>
-      <div class="form-group"><label>12 KG Price</label><input id="editPrice12" type="number"></div>
-      <div class="form-group"><label>24 KG Price</label><input id="editPrice24" type="number"></div>
+      
+      <p style="font-size:13px; font-weight:700; margin-top:15px; margin-bottom:5px;">Brands & Prices (JSON)</p>
+      <p style="font-size:11px; color:#888; margin-bottom:5px;">Format: [{"name":"Omera", "price12":2200, "price25":4200}]</p>
+      <div class="form-group"><textarea id="editBrandsJson" rows="3" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:6px; font-family:monospace;"></textarea></div>
+      
       <button class="btn-save" onclick="savePartnerEdit()">Save Changes</button>
       <button onclick="closeModal()" style="width:100%; margin-top:10px; background:none; border:none; color:#888; cursor:pointer;">Cancel</button>
     </div>
@@ -90,7 +96,8 @@
           return `
             <div class="admin-card">
               <p><strong>কাস্টমার:</strong> ${order.customerName} (${order.customerPhone})</p>
-              <p><strong>ঠিকানা:</strong> ${order.customerAddress} | <strong>পার্টনার:</strong> ${order.partnerId}</p>
+              <p><strong>ঠিকানা:</strong> ${order.customerAddress}</p>
+              <p><strong>অর্ডার:</strong> ${order.brand} - ${order.cylinderSize}</p>
             </div>`;
         }).join('');
       } catch (error) { listEl.innerHTML = `<p style="color:red;">Error: ${error.message}</p>`; }
@@ -102,14 +109,15 @@
         const snapshot = await getDocs(collection(db, "users"));
         listEl.innerHTML = snapshot.docs.map(docSnap => {
           const p = docSnap.data();
+          let brandsText = p.brands ? p.brands.map(b => b.name).join(', ') : 'None';
           return `
             <div class="partner-card">
               <div>
                 <p><strong>${p.shopName || 'No Name'}</strong> (ID: ${p.partnerId || 'N/A'})</p>
-                <p>12kg: ${p.price12 || '-'} | 24kg: ${p.price24 || '-'}</p>
+                <p style="font-size:12px; color:#666;">Brands: ${brandsText}</p>
               </div>
               <div>
-                <button class="btn-edit" onclick="openEditModal('${docSnap.id}', '${p.partnerId || ''}', '${p.shopName || ''}', '${p.phone || ''}', '${p.address || ''}', '${p.price12 || ''}', '${p.price24 || ''}')"><i class="fa-solid fa-pen"></i></button>
+                <button class="btn-edit" onclick="openEditModal('${docSnap.id}')">Edit</button>
                 <button class="btn-delete" onclick="deletePartner('${docSnap.id}')"><i class="fa-solid fa-trash"></i></button>
               </div>
             </div>`;
@@ -117,14 +125,19 @@
       } catch (error) { listEl.innerHTML = `<p style="color:red;">Error: ${error.message}</p>`; }
     }
 
-    window.openEditModal = function(docId, partnerId, shopName, phone, address, price12, price24) {
+    window.openEditModal = async function(docId) {
       document.getElementById('editDocId').value = docId;
-      document.getElementById('editPartnerId').value = partnerId;
-      document.getElementById('editShopName').value = shopName;
-      document.getElementById('editPhone').value = phone;
-      document.getElementById('editAddress').value = address;
-      document.getElementById('editPrice12').value = price12;
-      document.getElementById('editPrice24').value = price24;
+      const docSnap = await getDocs(query(collection(db, "users"))); // Fetch all to find, or use getDoc
+      // Get specific doc
+      const { getDoc } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
+      const p = (await getDoc(doc(db, "users", docId))).data();
+      
+      document.getElementById('editShopName').value = p.shopName || '';
+      document.getElementById('editPartnerId').value = p.partnerId || '';
+      document.getElementById('editPhone').value = p.phone || '';
+      document.getElementById('editAddress').value = p.address || '';
+      document.getElementById('editBrandsJson').value = JSON.stringify(p.brands || [], null, 2);
+      
       document.getElementById('editModal').classList.add('active');
     };
 
@@ -133,15 +146,21 @@
     window.savePartnerEdit = async function() {
       const docId = document.getElementById('editDocId').value;
       try {
+        let brandsData = [];
+        try {
+          brandsData = JSON.parse(document.getElementById('editBrandsJson').value);
+        } catch(e) {
+          alert("JSON ফরম্যাট ভুল আছে!"); return;
+        }
+
         await updateDoc(doc(db, "users", docId), {
           partnerId: document.getElementById('editPartnerId').value,
           shopName: document.getElementById('editShopName').value,
           phone: document.getElementById('editPhone').value,
           address: document.getElementById('editAddress').value,
-          price12: Number(document.getElementById('editPrice12').value) || 0,
-          price24: Number(document.getElementById('editPrice24').value) || 0
+          brands: brandsData
         });
-        alert("সফলভাবে আপডেট হয়েছে!");
+        alert("সফলভাবে আপডেট হয়েছে!");
         closeModal(); loadAllPartners();
       } catch (error) { alert("সমস্যা: " + error.message); }
     };
@@ -150,7 +169,7 @@
       if(!confirm("ডিলিট করতে চান?")) return;
       try {
         await deleteDoc(doc(db, "users", docId));
-        alert("ডিলিট হয়েছে!"); loadAllPartners();
+        alert("ডিলিট হয়েছে!"); loadAllPartners();
       } catch (error) { alert("সমস্যা: " + error.message); }
     };
   </script>
