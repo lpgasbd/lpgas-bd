@@ -19,6 +19,7 @@
     .form-group { margin-bottom: 15px; }
     .form-group label { display: block; font-weight: 700; font-size: 13px; margin-bottom: 5px; }
     .form-group input, .form-group select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; outline: none; }
+    .search-input { margin-bottom: 5px !important; background: #f8f9fa; border-color: #0066cc !important; }
     .btn-save { background: #cc0000; color: white; border: none; padding: 12px; border-radius: 6px; font-weight: 700; width: 100%; cursor: pointer; margin-top: 15px; }
     .brand-card-ui { background: #fff; border: 1.5px solid #eee; border-radius: 8px; padding: 15px; margin-bottom: 15px; position: relative; box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
     .brand-card-ui .delete-btn { position: absolute; top: 10px; right: 10px; background: #dc3545; color: white; border: none; border-radius: 4px; padding: 6px 10px; cursor: pointer; }
@@ -52,14 +53,18 @@
         
         <div class="form-group"><label>দোকানের নাম (Shop Name)</label><input id="pShopName" placeholder="যেমন: করিম গ্যাস হাউজ"></div>
         <div class="form-group"><label>ফোন নাম্বার</label><input id="pPhone" placeholder="017XXXXXXXX"></div>
+        
         <div class="form-group">
           <label>জেলা (District)</label>
+          <input type="text" id="pDistrictSearch" class="search-input" placeholder="🔍 জেলা খুঁজুন">
           <select id="pDistrict" onchange="loadThanas('pDistrict', 'pThana')">
             <option value="">জেলা সিলেক্ট করুন</option>
           </select>
         </div>
+        
         <div class="form-group">
           <label>থানা (Thana)</label>
+          <input type="text" id="pThanaSearch" class="search-input" placeholder="🔍 থানা খুঁজুন">
           <select id="pThana">
             <option value="">আগে জেলা সিলেক্ট করুন</option>
           </select>
@@ -85,17 +90,45 @@
     let myPartnerId = null;
     let currentBrands = []; 
     let locationData = {};
+    let allDistricts = [];
 
     // জেলা লোড করা
     fetch('./assets/js/bd-locations.json')
       .then(res => res.json())
       .then(data => {
         locationData = data;
-        const distSelect = document.getElementById('pDistrict');
-        for (const district in data) {
-          distSelect.innerHTML += `<option value="${district}">${district}</option>`;
-        }
+        allDistricts = Object.keys(data).sort();
+        renderDistricts(allDistricts);
       });
+
+    function renderDistricts(districts) {
+      const distSelect = document.getElementById('pDistrict');
+      distSelect.innerHTML = '<option value="">জেলা সিলেক্ট করুন</option>';
+      districts.forEach(district => {
+        distSelect.innerHTML += `<option value="${district}">${district}</option>`;
+      });
+    }
+
+    // জেলা সার্চ
+    document.getElementById('pDistrictSearch').addEventListener('input', (e) => {
+      const val = e.target.value.toLowerCase();
+      const filtered = allDistricts.filter(d => d.toLowerCase().includes(val));
+      renderDistricts(filtered);
+    });
+
+    // থানা সার্চ
+    document.getElementById('pThanaSearch').addEventListener('input', (e) => {
+      const val = e.target.value.toLowerCase();
+      const district = document.getElementById('pDistrict').value;
+      if (!district) return;
+      
+      const thanaSelect = document.getElementById('pThana');
+      const allThanas = locationData[district] || [];
+      const filtered = allThanas.filter(t => t.toLowerCase().includes(val));
+      
+      thanaSelect.innerHTML = '<option value="">থানা সিলেক্ট করুন</option>';
+      filtered.forEach(t => { thanaSelect.innerHTML += `<option value="${t}">${t}</option>`; });
+    });
 
     window.loadThanas = function(districtId, thanaId) {
       const district = document.getElementById(districtId).value;
@@ -103,7 +136,7 @@
       thanaSelect.innerHTML = '<option value="">থানা সিলেক্ট করুন</option>';
       
       if (district && locationData[district]) {
-        locationData[district].forEach(thana => {
+        locationData[district].sort().forEach(thana => {
           thanaSelect.innerHTML += `<option value="${thana}">${thana}</option>`;
         });
       }
@@ -133,7 +166,6 @@
           document.getElementById('pShopName').value = data.shopName || '';
           document.getElementById('pPhone').value = data.phone || '';
           
-          // জেলা ও থানা সেট করা
           if (data.district) {
             document.getElementById('pDistrict').value = data.district;
             window.loadThanas('pDistrict', 'pThana');
