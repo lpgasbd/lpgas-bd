@@ -50,38 +50,50 @@
     async function loadRealPartners() {
       try {
         const snapshot = await getDocs(collection(db, "users"));
-        // শুধু তাদের দেখাবো যাদের partnerId আছে
         allPartners = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })).filter(p => p.partnerId);
         renderDealers(allPartners);
       } catch (error) {
-        dealerListEl.innerHTML = `<p style="text-align:center; color:red;">ডেটা লোড করতে সমস্যা হয়েছে।</p>`;
+        dealerListEl.innerHTML = `<p style="text-align:center; color:red;">ডেটা লোড করতে সমস্যা হয়েছে।</p>`;
       }
     }
 
     function renderDealers(dealers) {
       if (dealers.length === 0) {
-        dealerListEl.innerHTML = `<p style="text-align:center; color:#888; margin-top:20px;">কোনো পার্টনার পাওয়া যায়নি।</p>`;
+        dealerListEl.innerHTML = `<p style="text-align:center; color:#888; margin-top:20px;">কোনো পার্টনার পাওয়া যায়নি।</p>`;
         return;
       }
       
-      dealerListEl.innerHTML = dealers.map(dealer => `
+      dealerListEl.innerHTML = dealers.map(dealer => {
+        // ব্র্যান্ড ও দাম দেখানোর লজিক
+        let brandsHtml = '';
+        if(dealer.brands && dealer.brands.length > 0) {
+          brandsHtml = dealer.brands.map(b => `
+            <div style="font-size: 13px; margin-bottom: 3px;">
+              <i class="fa-solid fa-tags" style="color:#0066cc"></i> <strong>${b.name}</strong>: ১২কেজি ৳${b.price12 || 'N/A'}, ২৫কেজি ৳${b.price25 || 'N/A'}
+            </div>
+          `).join('');
+        } else {
+          brandsHtml = '<span style="font-size:12px; color:#888;">দাম আপডেট করা হয়নি</span>';
+        }
+
+        return `
         <div class="dealer-card">
           <div class="dealer-header">
             <div class="dealer-name">${dealer.shopName || 'New Partner'}</div>
-            <div class="dealer-dist" style="background:#e6f0fa; color:#0066cc;"><i class="fa-solid fa-tags"></i> ${dealer.companyName || 'Multi-brand'}</div>
           </div>
           <div class="dealer-info">
             <span><i class="fa-solid fa-map-pin"></i> ${dealer.address || 'Location not set'}</span>
             <span><i class="fa-solid fa-phone"></i> ${dealer.phone || 'Phone not set'}</span>
           </div>
-          <div class="dealer-price" style="font-size: 14px; margin-bottom: 15px;">
-            ১২ কেজি: <span>৳ ${dealer.price12 || 'N/A'}</span> &nbsp;|&nbsp; ২৫ কেজি: <span>৳ ${dealer.price25 || 'N/A'}</span>
+          <div class="dealer-price" style="margin-bottom: 15px; background: #f8f9fa; padding: 10px; border-radius: 8px;">
+            ${brandsHtml}
           </div>
           <div class="btn-group">
             <button class="btn-order" onclick="goToOrder('${dealer.partnerId}')"><i class="fa-solid fa-bag-shopping"></i> Order Now</button>
           </div>
         </div>
-      `).join('');
+      `;
+      }).join('');
     }
 
     window.searchDealers = function() {
