@@ -20,10 +20,15 @@
     .form-card { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
     .form-group { margin-bottom: 15px; }
     .form-group label { display: block; font-weight: 700; font-size: 13px; margin-bottom: 5px; }
-    .form-group input, .form-group select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; outline: none; }
+    .form-group input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; outline: none; }
     .btn-save { background: #cc0000; color: white; border: none; padding: 12px; border-radius: 6px; font-weight: 700; width: 100%; cursor: pointer; margin-top: 15px; }
     
-    .price-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    /* Dynamic Brand Rows */
+    .brand-row { display: flex; gap: 8px; margin-bottom: 10px; align-items: center; background: #f8f9fa; padding: 10px; border-radius: 8px; border: 1px solid #eee; }
+    .brand-row input { flex: 1; padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 13px; }
+    .brand-row input[type="number"] { width: 80px; flex: none; }
+    .btn-del-row { background: #dc3545; color: white; border: none; width: 30px; height: 30px; border-radius: 4px; cursor: pointer; display: flex; justify-content: center; align-items: center; }
+    .btn-add { background: #e6f0fa; color: #0066cc; border: 1px dashed #0066cc; padding: 10px; border-radius: 6px; font-weight: 700; cursor: pointer; width: 100%; margin-bottom: 15px; }
   </style>
 </head>
 <body>
@@ -53,24 +58,11 @@
         <div class="form-group"><label>এলাকা (Area)</label><input id="pArea" placeholder="যেমন: ধানমন্ডি"></div>
         
         <hr style="margin: 15px 0; border: none; border-top: 1px dashed #ccc;">
+        <p style="font-size: 14px; font-weight: 700; margin-bottom: 10px; color: #0066cc;">কোম্পানি ও দাম (সার্ভিস চার্জ সহ)</p>
         
-        <!-- কোম্পানি ১ -->
-        <p style="font-size: 14px; font-weight: 700; margin-bottom: 10px; color: #0066cc;">কোম্পানি ১</p>
-        <div class="form-group"><label>কোম্পানির নাম</label><input id="pComp1" placeholder="যেমন: Omera"></div>
-        <div class="price-grid">
-          <div class="form-group"><label>১২ কেজি দাম (সার্ভিস চার্জ সহ)</label><input type="number" id="pComp1Price12" placeholder="৳"></div>
-          <div class="form-group"><label>২৫ কেজি দাম (সার্ভিস চার্জ সহ)</label><input type="number" id="pComp1Price25" placeholder="৳"></div>
-        </div>
-
-        <hr style="margin: 15px 0; border: none; border-top: 1px dashed #ccc;">
-
-        <!-- কোম্পানি ২ -->
-        <p style="font-size: 14px; font-weight: 700; margin-bottom: 10px; color: #0066cc;">কোম্পানি ২ (ঐচ্ছিক)</p>
-        <div class="form-group"><label>কোম্পানির নাম</label><input id="pComp2" placeholder="যেমন: Bashundhara"></div>
-        <div class="price-grid">
-          <div class="form-group"><label>১২ কেজি দাম</label><input type="number" id="pComp2Price12" placeholder="৳"></div>
-          <div class="form-group"><label>২৫ কেজি দাম</label><input type="number" id="pComp2Price25" placeholder="৳"></div>
-        </div>
+        <!-- ডাইনামিক ব্র্যান্ড লিস্ট -->
+        <div id="brandContainer"></div>
+        <button type="button" class="btn-add" onclick="addBrandRow()"><i class="fa-solid fa-plus"></i> নতুন কোম্পানি যোগ করুন</button>
         
         <button class="btn-save" onclick="saveProfile()">Save Changes</button>
       </div>
@@ -84,6 +76,7 @@
 
     let currentUser = null;
     let myPartnerId = null;
+    let currentBrands = []; // ব্র্যান্ড ডেটা জমা রাখার অ্যারে
 
     onAuthStateChanged(auth, async (user) => {
       if (!user) { window.location.href = "partner-login.html"; } 
@@ -110,45 +103,60 @@
           document.getElementById('pPhone').value = data.phone || '';
           document.getElementById('pArea').value = data.address || '';
           
-          // ব্র্যান্ড ডেটা লোড (যদি থাকে)
-          if(data.brands) {
-            document.getElementById('pComp1').value = data.brands[0]?.name || '';
-            document.getElementById('pComp1Price12').value = data.brands[0]?.price12 || '';
-            document.getElementById('pComp1Price25').value = data.brands[0]?.price25 || '';
-            document.getElementById('pComp2').value = data.brands[1]?.name || '';
-            document.getElementById('pComp2Price12').value = data.brands[1]?.price12 || '';
-            document.getElementById('pComp2Price25').value = data.brands[1]?.price25 || '';
-          }
+          currentBrands = data.brands || []; // ফায়ারবেস থেকে ব্র্যান্ড নেওয়া
+          renderBrandRows(); // ব্র্যান্ড রেন্ডার করা
         }
         if (myPartnerId) { loadOrders(); }
       } catch (error) { console.error(error); }
     }
 
+    // ব্র্যান্ড রেন্ডার করার ফাংশন
+    function renderBrandRows() {
+      const container = document.getElementById('brandContainer');
+      if(currentBrands.length === 0) {
+        container.innerHTML = '<p style="font-size:12px; color:#888; text-align:center;">কোনো কোম্পানি যোগ করা হয়নি।</p>';
+        return;
+      }
+      container.innerHTML = currentBrands.map((b, index) => `
+        <div class="brand-row">
+          <input type="text" placeholder="কোম্পানি (Omera)" value="${b.name || ''}" oninput="updateBrand(${index}, 'name', this.value)">
+          <input type="number" placeholder="১২কেজি" value="${b.price12 || ''}" oninput="updateBrand(${index}, 'price12', this.value)">
+          <input type="number" placeholder="২৫কেজি" value="${b.price25 || ''}" oninput="updateBrand(${index}, 'price25', this.value)">
+          <button type="button" class="btn-del-row" onclick="removeBrand(${index})"><i class="fa-solid fa-trash"></i></button>
+        </div>
+      `).join('');
+    }
+
+    // নতুন ব্র্যান্ড রো যোগ করা
+    window.addBrandRow = function() {
+      currentBrands.push({ name: '', price12: '', price25: '' });
+      renderBrandRows();
+    };
+
+    // ব্র্যান্ড ডিলিট করা
+    window.removeBrand = function(index) {
+      currentBrands.splice(index, 1);
+      renderBrandRows();
+    };
+
+    // ইনপুটে টাইপ করলে অ্যারে আপডেট হওয়া
+    window.updateBrand = function(index, field, value) {
+      currentBrands[index][field] = value;
+    };
+
+    // প্রোফাইল সেভ করা
     window.saveProfile = async function() {
       const alertEl = document.getElementById('profileAlert');
       
-      const brands = [];
-      if(document.getElementById('pComp1').value) {
-        brands.push({
-          name: document.getElementById('pComp1').value,
-          price12: Number(document.getElementById('pComp1Price12').value) || 0,
-          price25: Number(document.getElementById('pComp1Price25').value) || 0
-        });
-      }
-      if(document.getElementById('pComp2').value) {
-        brands.push({
-          name: document.getElementById('pComp2').value,
-          price12: Number(document.getElementById('pComp2Price12').value) || 0,
-          price25: Number(document.getElementById('pComp2Price25').value) || 0
-        });
-      }
+      // খালি ব্র্যান্ড রো ফিল্টার করা
+      const validBrands = currentBrands.filter(b => b.name.trim() !== '');
 
       try {
         await updateDoc(doc(db, 'users', currentUser.uid), {
           shopName: document.getElementById('pShopName').value,
           phone: document.getElementById('pPhone').value,
           address: document.getElementById('pArea').value,
-          brands: brands
+          brands: validBrands
         });
         alertEl.style.display = 'block';
         alertEl.style.background = '#d4edda';
@@ -177,8 +185,7 @@
               <p><strong>কাস্টমার:</strong> ${order.customerName} (${order.customerPhone})</p>
               <p><strong>ঠিকানা:</strong> ${order.customerAddress}</p>
               <div style="background:#f8f9fa; padding:8px; border-radius:6px; margin: 10px 0;">
-                <strong>অর্ডার:</strong>
-                <p>${order.brand} - ${order.cylinderSize} (${order.quantity} পিস)</p>
+                <strong>অর্ডার:</strong> ${order.brand} - ${order.cylinderSize} (${order.quantity} পিস)
               </div>
               <div class="action-btns">
                 <a href="tel:${order.customerPhone}" class="btn-call"><i class="fa-solid fa-phone"></i> Call</a>
